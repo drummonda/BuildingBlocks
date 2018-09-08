@@ -1,7 +1,7 @@
 {
-  "name": "boilermaker",
+  "name": "BuildingBlocks",
   "version": "1.0.0",
-  "description": "Some boilerplate code to get you started - get shakin'!",
+  "description": "A visualization of a simple blockchain",
   "engines": {
     "node": ">= 7.0.0"
   },
@@ -33,12 +33,13 @@
       "git add"
     ]
   },
-  "author": "Fullstack Academy of Code",
+  "author": "Andrew Drummond",
   "license": "MIT",
   "dependencies": {
     "axios": "^0.15.3",
     "compression": "^1.7.3",
     "connect-session-sequelize": "^4.1.0",
+    "crypto-js": "^3.1.6",
     "express": "^4.16.3",
     "express-session": "^1.15.1",
     "history": "^4.6.3",
@@ -55,6 +56,7 @@
     "redux": "^3.6.0",
     "redux-logger": "^2.8.1",
     "redux-thunk": "^2.3.0",
+    "semantic-ui-react": "^0.82.3",
     "sequelize": "^4.38.0",
     "socket.io": "^2.1.1"
   },
