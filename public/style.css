@@ -19,3 +19,13 @@ form div {
   margin: 1em;
   display: inline-block;
 }
+
+.main {
+  margin: 3%;
+}
+
+.block {
+  display: flex;
+  flex-flow: wrap row;
+  margin: 2%;
+}

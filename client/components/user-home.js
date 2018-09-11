@@ -1,6 +1,7 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import {connect} from 'react-redux'
+import Blockchain from './blockchain'
 
 /**
  * COMPONENT
@@ -11,6 +12,7 @@ export const UserHome = props => {
   return (
     <div>
       <h3>Welcome to Building Blocks, {email}</h3>
+      <Blockchain />
     </div>
   )
 }
