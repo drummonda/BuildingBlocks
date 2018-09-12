@@ -1,5 +1,4 @@
 import axios from 'axios'
-import history from '../history'
 
 /**
  * ACTION TYPES
@@ -32,9 +31,9 @@ export const fetchBlockchain = () => async dispatch => {
   dispatch(setBlockchain(data));
 }
 
-export const postBlockchain = blockData => async dispatch => {
+export const mineBlock = blockData => async dispatch => {
   try {
-    const { data } = await axios.post('/api/blockchain', { blockData } )
+    const { data } = await axios.post('/api/blockchain/mine', { blockData } )
     dispatch(setBlockchain(data));
   } catch (err) {
     console.error(err);

@@ -6,6 +6,7 @@ module.exports = {
     '@babel/polyfill', // enables async-await
     './client/index.js'
   ],
+  externals: ["fs", "uws"],
   output: {
     path: __dirname,
     filename: './public/bundle.js'

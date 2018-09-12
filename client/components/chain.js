@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import {connect} from 'react-redux'
 import { Card } from 'semantic-ui-react'
-import { fetchBlockchain, postBlockchain } from '../store'
+import { fetchBlockchain } from '../store'
 import Block from './block'
 
 class Chain extends Component {
@@ -12,7 +12,6 @@ class Chain extends Component {
 
   render() {
     const { blockchain } = this.props;
-    console.log(blockchain);
 
     return (
       <div>
@@ -32,7 +31,6 @@ const mapStateToProps = state => ({
 
 const mapDispatchToProps = dispatch => ({
   fetchBlockchain: () => dispatch(fetchBlockchain()),
-  postBlockchain: blockchain => dispatch(postBlockchain(blockchain)),
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(Chain);

@@ -1,5 +1,5 @@
 import {connect} from 'react-redux'
-import { fetchBlockchain, postBlockchain } from '../store'
+import { fetchBlockchain, mineBlock } from '../store'
 import React, { Component } from 'react'
 import { Form, Input, Button } from 'semantic-ui-react'
 import Chain from './chain'
@@ -34,12 +34,11 @@ class Blockchain extends Component {
   }
 
   addBlock(blockData) {
-    this.props.postBlockchain(blockData);
+    this.props.mineBlock(blockData);
   }
 
   render() {
     const { data } = this.state;
-    const { blockchain } = this.props;
 
     return (
       <div>
@@ -52,7 +51,7 @@ class Blockchain extends Component {
             onChange={this.handleChange}
           />
           <Button primary>
-            New fucking block!
+            New block!
           </Button>
         </Form>
       </div>
@@ -66,7 +65,7 @@ const mapStateToProps = state => ({
 
 const mapDispatchToProps = dispatch => ({
   fetchBlockchain: () => dispatch(fetchBlockchain()),
-  postBlockchain: blockData => dispatch(postBlockchain(blockData)),
+  mineBlock: blockData => dispatch(mineBlock(blockData)),
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(Blockchain);

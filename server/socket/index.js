@@ -1,4 +1,17 @@
-const { getLatestBlock, addBlock, getState, replaceChain } = require('../blockchain');
+const WebSocket = require("ws");
+const socketio = require('socket.io-client');
+const ioserver = require('socket.io');
+const P2P = process.env.P2P_PORT || 6001;
+const url = `ws://localhost:${P2P}`;
+
+const {
+  handleBlockchainResponse,
+  responseLatestMsg,
+  responseChainMsg,
+  RESPONSE_BLOCKCHAIN,
+  QUERY_ALL,
+  QUERY_LATEST
+} = require('./utils')
 
 /*
  ---------------
@@ -6,57 +19,21 @@ const { getLatestBlock, addBlock, getState, replaceChain } = require('../blockch
  ---------------
  */
 const sockets = [];
-const QUERY_LATEST = 0;
-const QUERY_ALL = 1;
-const RESPONSE_BLOCKCHAIN = 2;
 
 /*
- ---------------------
- MESSAGE HELPER METHODS
- ---------------------
+ -------------------------
+ HELPER METHODS
+ -------------------------
  */
-const write = (socket, message) => socket.emit("message", JSON.stringify(message));
+
+const write = (socket, message) => socket.emit("message", message);
 const broadcast = (message) => sockets.forEach(socket => write(socket, message));
-const queryAllMsg = () => ({'type': QUERY_ALL});
 
-const responseChainMsg = () =>({
-  'type': RESPONSE_BLOCKCHAIN, 'data': JSON.stringify(getState())
-});
+const getPeers = () => (
+  sockets.map(s => s.request.connection.remoteAddress + ':' + s.request.connection.remotePort)
+)
 
-const responseLatestMsg = () => ({
-  'type': RESPONSE_BLOCKCHAIN,
-  'data': JSON.stringify([getLatestBlock()])
-});
-
-const handleBlockchainResponse = (message) => {
-    const receivedBlocks = JSON.parse(message.data).sort((b1, b2) => (b1.index - b2.index));
-    const latestBlockReceived = receivedBlocks[receivedBlocks.length - 1];
-    const latestBlockHeld = getLatestBlock();
-    if (latestBlockReceived.index > latestBlockHeld.index) {
-        console.log('blockchain possibly behind. We got: ' + latestBlockHeld.index + ' Peer got: ' + latestBlockReceived.index);
-        if (latestBlockHeld.hash === latestBlockReceived.previousHash) {
-            console.log("We can append the received block to our chain");
-            addBlock(latestBlockReceived);
-            broadcast(responseLatestMsg());
-        } else if (receivedBlocks.length === 1) {
-            console.log("We have to query the chain from our peer");
-            broadcast(queryAllMsg());
-        } else {
-            console.log("Received blockchain is longer than current blockchain");
-            replaceChain(receivedBlocks);
-        }
-    } else {
-        console.log('received blockchain is not longer than current blockchain. Do nothing');
-    }
-};
-
-/*
- -------------------------
- CONNECTION HELPER METHODS
- -------------------------
- */
-
-const closeConnection = (socket) => {
+const closeConnection = socket => {
   console.log('connection failed to peer: ' + socket.url);
   sockets.splice(sockets.indexOf(socket), 1);
 };
@@ -67,38 +44,52 @@ const closeConnection = (socket) => {
  -----------------
  */
 
-module.exports = io => {
-  io.on('connection', socket => {
+const initErrorHandler = socket => {
+  socket.on('disconnect', () => {
+    closeConnection(socket);
+    console.log(`Connection ${socket.id} has left the building`)
+  })
+
+  socket.on('error', () => {
+    closeConnection(socket);
+    console.log(`Connection ${socket.id} threw an error`)
+  });
+}
+
+const initConnection = socket => {
     sockets.push(socket);
-    console.log(`A socket connection to the server has been made: ${socket.id}`)
+    initErrorHandler(socket);
+    write(socket, responseChainMsg());
+};
+
+const initP2PServer = () => {
+  const server = ioserver(6001);
+  server.on('connection', ws => initConnection(ws));
+  console.log('listening websocket p2p port on: ' + P2P);
+};
+
+const initServer = io => {
+  io.on('connection', socket => {
+    console.log(`A socket connection to the server has been made: ${socket.id}`);
+    initConnection(socket);
 
     socket.on('disconnect', () => {
-      closeConnection(socket);
       console.log(`Connection ${socket.id} has left the building`)
     })
-
-    socket.on('error', () => {
-      closeConnection(socket);
-      console.log(`Connection ${socket.id} threw an error`)
-    });
-
-    socket.on('message', (data) => {
-        const message = JSON.parse(data);
-        console.log('Received message' + JSON.stringify(message));
-        switch (message.type) {
-            case QUERY_LATEST:
-              write(socket, responseLatestMsg());
-              break;
-            case QUERY_ALL:
-              write(socket, responseChainMsg());
-              break;
-            case RESPONSE_BLOCKCHAIN:
-              handleBlockchainResponse(message);
-              break;
-            default:
-              console.log("shit!!");
-        }
-    });
-
   })
+}
+
+module.exports = {
+  getPeers,
+  initServer,
+  initP2PServer,
+  write,
+  broadcast,
+  closeConnection,
+  responseLatestMsg,
+  handleBlockchainResponse,
+  responseChainMsg,
+  RESPONSE_BLOCKCHAIN,
+  QUERY_ALL,
+  QUERY_LATEST
 }

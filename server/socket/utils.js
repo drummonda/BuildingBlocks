@@ -1,14 +1,21 @@
-import io from 'socket.io-client';
-import { getState, getLatestBlock, addBlock, replaceChain } from '../server/blockchain';
-const ws = io(window.location.origin);
+const { getLatestBlock, addBlock, getState, replaceChain } = require('../blockchain');
+const { broadcast } = require('./index');
 
+/*
+ ---------------------
+ CONSTANTS
+ ---------------------
+ */
 const QUERY_LATEST = 0;
 const QUERY_ALL = 1;
 const RESPONSE_BLOCKCHAIN = 2;
 
-const write = (socket, message) => socket.emit("message", message);
-// const broadcast = (message) => sockets.forEach(socket => write(socket, message));
-
+/*
+ ---------------------
+ MESSAGE HELPER METHODS
+ ---------------------
+ */
+const queryChainLengthMsg = () => ({'type': QUERY_LATEST});
 const queryAllMsg = socket => socket.emit('message', {'type': QUERY_ALL});
 
 const responseChainMsg = () =>({
@@ -29,10 +36,10 @@ const handleBlockchainResponse = (message) => {
         if (latestBlockHeld.hash === latestBlockReceived.previousHash) {
             console.log("We can append the received block to our chain");
             addBlock(latestBlockReceived);
-            // broadcast(responseLatestMsg());
+            broadcast(responseLatestMsg());
         } else if (receivedBlocks.length === 1) {
             console.log("We have to query the chain from our peer");
-            // broadcast(queryAllMsg());
+            broadcast(queryAllMsg());
         } else {
             console.log("Received blockchain is longer than current blockchain");
             replaceChain(receivedBlocks);
@@ -42,33 +49,14 @@ const handleBlockchainResponse = (message) => {
     }
 };
 
-const initMessageHandler = sock => {
-  sock.on('message', ({ data }) => {
-    console.log(data);
-    const message = JSON.parse(data);
-    console.log('Received message' + JSON.stringify(message));
-    switch (message.type) {
-      case QUERY_LATEST:
-        write(responseLatestMsg());
-        break;
-      case QUERY_ALL:
-        write(ws, responseChainMsg());
-        break;
-      case RESPONSE_BLOCKCHAIN:
-        console.log('here');
-        handleBlockchainResponse(message);
-        break;
-      default:
-        console.log("shit!!");
-    }
-  });
+
+module.exports = {
+  handleBlockchainResponse,
+  responseLatestMsg,
+  responseChainMsg,
+  queryChainLengthMsg,
+  queryAllMsg,
+  RESPONSE_BLOCKCHAIN,
+  QUERY_ALL,
+  QUERY_LATEST
 }
-
-
-ws.on('connect', () => {
-  console.log('Connected!')
-
-  initMessageHandler(ws);
-});
-
-export default ws
