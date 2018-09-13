@@ -20,7 +20,7 @@ router.post('/mine', (req, res, next) => {
     const { blockData } = req.body;
     const newBlock = generateNextBlock(blockData);
     const newBlockchain = addBlock(newBlock);
-    broadcast(responseLatestMsg());
+    broadcast(responseLatestMsg(newBlock));
     res.json(newBlockchain);
   } catch (err) {
     next(err);

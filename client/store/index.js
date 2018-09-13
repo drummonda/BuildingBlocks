@@ -4,8 +4,9 @@ import thunkMiddleware from 'redux-thunk'
 import {composeWithDevTools} from 'redux-devtools-extension'
 import user from './user'
 import blockchain from './blockchain'
+import message from './message'
 
-const reducer = combineReducers({user, blockchain})
+const reducer = combineReducers({user, blockchain, message})
 const middleware = composeWithDevTools(
   applyMiddleware(thunkMiddleware, createLogger({collapsed: true}))
 )
@@ -14,3 +15,4 @@ const store = createStore(reducer, middleware)
 export default store
 export * from './user'
 export * from './blockchain'
+export * from './message'

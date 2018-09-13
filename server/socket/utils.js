@@ -6,9 +6,9 @@ const { broadcast } = require('./index');
  CONSTANTS
  ---------------------
  */
-const QUERY_LATEST = 0;
-const QUERY_ALL = 1;
-const RESPONSE_BLOCKCHAIN = 2;
+const QUERY_LATEST = 'QUERY_LATEST';
+const QUERY_ALL = 'QUERY_ALL';
+const RESPONSE_BLOCKCHAIN = 'RESPONSE_BLOCKCHAIN';
 
 /*
  ---------------------

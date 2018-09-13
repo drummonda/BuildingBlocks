@@ -3,79 +3,65 @@ import {connect} from 'react-redux'
 import {Link} from 'react-router-dom'
 import {logout} from '../store'
 import React, { Component, Fragment } from 'react'
-import { Input, Menu, Segment } from 'semantic-ui-react'
+import { Input, Menu } from 'semantic-ui-react'
 
 class Navbar extends Component {
 
   constructor(props) {
     super(props);
-    this.state = { activeItem: 'home' }
-    this.handleItemClick = this.handleItemClick.bind(this);
     this.handleLogout = this.handleLogout.bind(this);
   }
 
-  componentDidMount() {
-    const { isLoggedIn } = this.props;
-    if(!isLoggedIn) this.setState({ activeItem: 'login' });
-  }
-
-  handleItemClick(e, { name }) {
-    this.setState({ activeItem: name });
-  }
-
-  handleLogout(e, { name }) {
-    this.setState({ activeItem: name });
+  handleLogout(e) {
+    e.preventDefault();
     this.props.logout();
   }
 
   render() {
-    const { activeItem } = this.state;
     const { isLoggedIn } = this.props;
 
     return (
       <div>
-        <Menu pointing>
-          <Menu.Item
-              name='BuildingBlocks'
-          />
+        <Menu inverted>
+          <Menu.Item id="logo">
+            <img src='cube.png' />
+            Building Blocks
+          </Menu.Item>
           {isLoggedIn ? (
             <Fragment>
               <Menu.Item
+                className='menu-item'
                 name='home'
                 as={Link}
                 to='/home'
-                active={activeItem === 'home'}
-                onClick={this.handleItemClick}
               />
               <Menu.Item
+                className='menu-item'
                 name='logout'
                 as={Link}
                 to='#'
-                active={activeItem === 'logout'}
                 onClick={this.handleLogout}
               />
             </Fragment>
           ) : (
             <Fragment>
               <Menu.Item
+                className='menu-item'
                 name='login'
                 as={Link}
                 to='/login'
-                active={activeItem === 'login'}
-                onClick={this.handleItemClick}
               />
               <Menu.Item
+                className='menu-item'
                 name='signup'
                 as={Link}
                 to='/signup'
-                active={activeItem === 'signup'}
-                onClick={this.handleItemClick}
               />
             </Fragment>
           )}
           <Menu.Menu position='right'>
             <Menu.Item>
-              <Input icon='search' placeholder='This does nothing' />
+              <Input icon='search' placeholder='This does nothing!' />
             </Menu.Item>
           </Menu.Menu>
         </Menu>

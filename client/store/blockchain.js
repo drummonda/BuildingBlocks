@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { write, broadcast, responseLatestMsg } from '../socket'
 
 /**
  * ACTION TYPES
@@ -28,6 +29,7 @@ export const setBlockchain = blockchain => ({
 // THUNK CREATORS
 export const fetchBlockchain = () => async dispatch => {
   const { data } = await axios.get('/api/blockchain');
+
   dispatch(setBlockchain(data));
 }
 

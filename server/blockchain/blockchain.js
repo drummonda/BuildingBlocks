@@ -1,5 +1,5 @@
 const { calculateHashForBlock, calculateHash } = require("./utils")
-const broadcast = require("../socket").broadcast;
+const { write, broadcast, responseLatestMsg } = require("../socket");
 
 // BLOCKCHAIN CONSTRUCTOR METHODS
 class Block {
@@ -77,10 +77,8 @@ const isValidChain = blockchainToValidate => {
 
 const replaceChain = newBlocks => {
   if (isValidChain(newBlocks) && newBlocks.length > state.blockchain.length) {
-      console.log('Received blockchain is valid. Replacing current blockchain with received blockchain');
       updateState(newBlocks);
-      // broadcast(responseLatestMsg(getLatestBlock()));
-      return newBlocks;
+      return getState();
   } else {
       throw new Error('Received blockchain invalid');
   }
@@ -103,5 +101,6 @@ module.exports = {
   generateNextBlock,
   getLatestBlock,
   getState,
-  addBlock
+  addBlock,
+  replaceChain
 }

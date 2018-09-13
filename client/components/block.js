@@ -5,7 +5,7 @@ const Block = ({ block }) => {
 
   return (
     <div className='block' >
-      <Card>
+      <Card color='teal'>
         <Card.Content>
           <Card.Header>Block #{block.index}</Card.Header>
           <Card.Description>{block.data}</Card.Description>

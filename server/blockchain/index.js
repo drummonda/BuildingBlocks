@@ -1,9 +1,10 @@
-const { getState, addBlock, getGenesisBlock, generateNextBlock, getLatestBlock } = require('./blockchain');
+const { getState, addBlock, getGenesisBlock, generateNextBlock, getLatestBlock, replaceChain } = require('./blockchain');
 
 module.exports = {
   getState,
   addBlock,
   getGenesisBlock,
   generateNextBlock,
-  getLatestBlock
+  getLatestBlock,
+  replaceChain
 }

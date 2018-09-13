@@ -29,3 +29,14 @@ form div {
   flex-flow: wrap row;
   margin: 2%;
 }
+
+.message {
+  margin: 3%;
+  background-color: #7dd3f2;
+  font-size: 1.25em;
+}
+
+#logo {
+  font-size: 1.6em;
+  color: #f44242;
+}

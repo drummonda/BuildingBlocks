@@ -1,62 +1,87 @@
 import io from 'socket.io-client';
 import { getState, getLatestBlock, addBlock, replaceChain } from '../server/blockchain';
+import store, { setBlockchain, updateStatus } from './store';
+
 const ws = io(window.location.origin);
 
-const QUERY_LATEST = 0;
-const QUERY_ALL = 1;
-const RESPONSE_BLOCKCHAIN = 2;
+/*
+ ---------------------
+ CONSTANTS
+ ---------------------
+ */
+const QUERY_LATEST = 'QUERY_LATEST';
+const QUERY_ALL = 'QUERY_ALL';
+const RESPONSE_BLOCKCHAIN = 'RESPONSE_BLOCKCHAIN';
 
-const write = (socket, message) => socket.emit("message", message);
+
+/*
+ ---------------------
+ MESSAGE HELPER METHODS
+ ---------------------
+ */
+const write = (socket, message) => socket.send("message", message);
 // const broadcast = (message) => sockets.forEach(socket => write(socket, message));
 
+const queryChainLengthMsg = () => ({'type': QUERY_LATEST});
 const queryAllMsg = socket => socket.emit('message', {'type': QUERY_ALL});
 
 const responseChainMsg = () =>({
   'type': RESPONSE_BLOCKCHAIN, 'data': JSON.stringify(getState())
 });
 
-const responseLatestMsg = block => ({
+const responseLatestMsg = blockchain => ({
   'type': RESPONSE_BLOCKCHAIN,
-  'data': JSON.stringify([block])
+  'data': JSON.stringify([blockchain])
 });
 
-const handleBlockchainResponse = (message) => {
-    const receivedBlocks = JSON.parse(message.data).sort((b1, b2) => (b1.index - b2.index));
-    const latestBlockReceived = receivedBlocks[receivedBlocks.length - 1];
-    const latestBlockHeld = getLatestBlock();
-    if (latestBlockReceived.index > latestBlockHeld.index) {
-        console.log('blockchain possibly behind. We got: ' + latestBlockHeld.index + ' Peer got: ' + latestBlockReceived.index);
-        if (latestBlockHeld.hash === latestBlockReceived.previousHash) {
-            console.log("We can append the received block to our chain");
-            addBlock(latestBlockReceived);
-            // broadcast(responseLatestMsg());
-        } else if (receivedBlocks.length === 1) {
-            console.log("We have to query the chain from our peer");
-            // broadcast(queryAllMsg());
-        } else {
-            console.log("Received blockchain is longer than current blockchain");
-            replaceChain(receivedBlocks);
-        }
-    } else {
-        console.log('received blockchain is not longer than current blockchain. Do nothing');
+/*
+ -----------------
+ UTILITY METHODS
+ -----------------
+ */
+const handleBlockchainResponse = (socket, message) => {
+    try {
+      const receivedBlocks = JSON.parse(message.data).sort((b1, b2) => (b1.index - b2.index));
+      const latestBlockReceived = receivedBlocks[receivedBlocks.length - 1];
+      const latestBlockHeld = getLatestBlock();
+      if (latestBlockReceived.index > latestBlockHeld.index) {
+          store.dispatch(updateStatus('blockchain possibly behind. We got: ' + latestBlockHeld.index + ' Peer got: ' + latestBlockReceived.index));
+          if (latestBlockHeld.hash === latestBlockReceived.previousHash) {
+              store.dispatch(updateStatus("We can append the received block to our chain"));
+              const newBlocks = addBlock(latestBlockReceived);
+              store.dispatch(updateStatus("Received blockchain is valid, Replacing current blockhain with received blockchain"));
+              store.dispatch(setBlockchain(newBlocks));
+              write(socket, responseLatestMsg(newBlocks));
+          } else if (receivedBlocks.length === 1) {
+              store.dispatch(updateStatus("We have to query the chain from our peer"));
+              write(socket, queryAllMsg());
+          } else {
+              store.dispatch(updateStatus("Received blockchain is longer than current blockchain"));
+              const newBlocks = replaceChain(receivedBlocks);
+              store.dispatch(updateStatus("Received blockchain is valid, Replacing current blockhain with received blockchain"));
+              write(socket, responseLatestMsg(newBlocks));
+          }
+      } else {
+          store.dispatch(updateStatus('received blockchain is not longer than current blockchain. Do nothing'));
+      }
+    } catch (err) {
+      console.error(err);
     }
 };
 
-const initMessageHandler = sock => {
-  sock.on('message', ({ data }) => {
-    console.log(data);
-    const message = JSON.parse(data);
-    console.log('Received message' + JSON.stringify(message));
+
+const initMessageHandler = socket => {
+  socket.on('message', message => {
+    console.log(message.type)
     switch (message.type) {
       case QUERY_LATEST:
-        write(responseLatestMsg());
+        write(socket, responseLatestMsg());
         break;
       case QUERY_ALL:
-        write(ws, responseChainMsg());
+        write(socket, responseChainMsg());
         break;
       case RESPONSE_BLOCKCHAIN:
-        console.log('here');
-        handleBlockchainResponse(message);
+        handleBlockchainResponse(socket, message);
         break;
       default:
         console.log("shit!!");
@@ -64,11 +89,18 @@ const initMessageHandler = sock => {
   });
 }
 
-
+/*
+ -----------------
+ INITIALIZE SOCKET
+ -----------------
+ */
 ws.on('connect', () => {
-  console.log('Connected!')
-
+  store.dispatch(updateStatus('Connected to network!'));
   initMessageHandler(ws);
+
+  ws.on('disconnect', () => {
+    store.dispatch(updateStatus('Disconnected from network'));
+  })
 });
 
 export default ws
