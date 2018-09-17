@@ -17,8 +17,8 @@ router.get('/', (req, res, next) => {
 router.post('/mineBlock', (req, res, next) => {
   try {
     const { blockData } = req.body;
-    const newBlock = generateNextBlock(blockData);
-    res.json(newBlock);
+    const newBlockchain = generateNextBlock(blockData);
+    res.json(newBlockchain);
   } catch (err) {
     next(err);
   }

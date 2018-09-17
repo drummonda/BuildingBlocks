@@ -67,7 +67,7 @@ function updateState(blockchain) {
 
 // BLOCKCHAIN UTILITY METHODS
 function isValidGenesis(block) {
-  return JSON.stringify(block) === JSON.stringify(genesisBlock);
+  return JSON.stringify(block) === JSON.stringify(genesisBlock());
 }
 
 function getLatestBlock() {
@@ -104,10 +104,10 @@ function isValidChain(blockchainToValidate) {
   if(!isValidGenesis(blockchainToValidate[0])) return false;
   for(let i = 1; i < blockchainToValidate.length; i++) {
     if(!isValidNewBlock(blockchainToValidate[i], blockchainToValidate[i-1])) {
+      console.log("the block was not valid", blockchainToValidate[i]);
       return false;
     }
   }
-  console.log("the chain was valid");
   return true;
 }
 
@@ -128,7 +128,8 @@ function replaceChain(newBlocks) {
      getAccumulatedDifficulty(newBlocks) > getAccumulatedDifficulty(getState())) {
     console.log('received blockchain is valid, replacing current blockchain with received blockchain');
     updateState(newBlocks);
-    broadcastLatest()
+    broadcastLatest();
+    return getState();
   } else {
     throw new Error('Received blockchain invalid')
   }
@@ -151,7 +152,7 @@ function generateNextBlock(blockData) {
   const nextIndex = previousBlock.index + 1;
   const nextTimestamp = new Date().getTime() / 1000;
   const newBlock = findBlock(nextIndex, previousBlock.hash, nextTimestamp, blockData, difficulty);
-  addBlockToChain(newBlock);
+  const newBlockchain = addBlockToChain(newBlock);
   broadcastLatest()
-  return newBlock;
+  return newBlockchain;
 }

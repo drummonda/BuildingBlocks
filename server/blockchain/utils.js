@@ -60,12 +60,10 @@ const hashMatchesBlockContent = block => {
 }
 
 const getAccumulatedDifficulty = blockchain => {
-  const difficulty = blockchain
-                      .map(block => block.difficulty)
-                      .map(difficulty => Math.pow(2, difficulty))
-                      .reduce((a, b) => a + b);
-  console.log("The difficulty", difficulty);
-  return difficulty;
+  return blockchain
+            .map(block => block.difficulty)
+            .map(difficulty => Math.pow(2, difficulty))
+            .reduce((a, b) => a + b);
 }
 
 const hasValidHash = block => {

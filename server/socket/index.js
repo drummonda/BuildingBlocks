@@ -147,7 +147,9 @@ function initMessageHandler(ws) {
         break;
 
       case RESPONSE_BLOCKCHAIN:
-        const receivedBlocks = JSONToObject(message.data);
+        const receivedMessage = JSONToObject(message);
+        const receivedBlocks = receivedMessage.data;
+        console.log("these were the received blocks", receivedBlocks);
         if(!receivedBlocks) {
           console.log('invalid blocks received');
           console.log(message.data);
