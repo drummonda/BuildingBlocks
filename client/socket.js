@@ -1,7 +1,9 @@
 import io from 'socket.io-client';
 import { getState, getLatestBlock, addBlock, replaceChain } from '../server/blockchain';
 import store, { setBlockchain, updateStatus } from './store';
-const ws = io(window.location.origin);
+const P2P = process.env.P2P_PORT || 6001;
+const url = `http://localhost:${P2P}`
+const ws = io(url);
 
 /*
  ---------------------
@@ -122,11 +124,11 @@ const initMessageHandler = socket => {
  -----------------
  */
 ws.on('connect', () => {
-  store.dispatch(updateStatus('Connected to network!'));
+  status(`Connected to network: ${ws.io.uri}`);
   initMessageHandler(ws);
 
   ws.on('disconnect', () => {
-    store.dispatch(updateStatus('Disconnected from network'));
+    status('Disconnected from network');
   })
 });
 
