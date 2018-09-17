@@ -1,6 +1,6 @@
 import React from 'react'
 
-import { Navbar, Status } from './components'
+import { Navbar, Status, VerticalMenu } from './components'
 import Routes from './routes'
 
 const App = () => {

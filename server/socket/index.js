@@ -1,16 +1,10 @@
-const WebSocket = require("ws");
-const socketio = require('socket.io-client');
 const ioserver = require('socket.io');
 const P2P = process.env.P2P_PORT || 6001;
-const url = `ws://localhost:${P2P}`;
 
 const {
   handleBlockchainResponse,
   responseLatestMsg,
   responseChainMsg,
-  RESPONSE_BLOCKCHAIN,
-  QUERY_ALL,
-  QUERY_LATEST
 } = require('./utils')
 
 /*
@@ -29,9 +23,9 @@ const sockets = [];
 const write = (socket, message) => socket.emit("message", message);
 const broadcast = (message) => sockets.forEach(socket => write(socket, message));
 
-const getPeers = () => (
-  sockets.map(s => s.request.connection.remoteAddress + ':' + s.request.connection.remotePort)
-)
+// const getPeers = () => (
+//   sockets.map(s => s.request.connection.remoteAddress + ':' + s.request.connection.remotePort)
+// )
 
 const closeConnection = socket => {
   console.log('connection failed to peer: ' + socket.url);
@@ -80,16 +74,8 @@ const initServer = io => {
 }
 
 module.exports = {
-  getPeers,
   initServer,
   initP2PServer,
-  write,
-  broadcast,
-  closeConnection,
   responseLatestMsg,
-  handleBlockchainResponse,
-  responseChainMsg,
-  RESPONSE_BLOCKCHAIN,
-  QUERY_ALL,
-  QUERY_LATEST
+  broadcast
 }

@@ -36,6 +36,17 @@ form div {
   font-size: 1.25em;
 }
 
+.blockies {
+  font-size: 1.1em;
+  margin: 1%
+}
+
+.username {
+  display: flex;
+  flex-flow: wrap row;
+  margin-bottom: 3%;
+}
+
 #logo {
   font-size: 1.6em;
   color: #f44242;

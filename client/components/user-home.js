@@ -1,7 +1,9 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import {connect} from 'react-redux'
+import Blockies from 'react-blockies'
 import Blockchain from './blockchain'
+import BlockchainExplain from './blockchainExplain'
 
 /**
  * COMPONENT
@@ -11,7 +13,12 @@ export const UserHome = props => {
 
   return (
     <div>
-      <h3>Welcome to Building Blocks, {email}</h3>
+      <BlockchainExplain />
+      <h3>Welcome to Building Blocks,</h3>
+      <div className='username'>
+        <Blockies seed={email} />
+        <p className="blockies">{email}</p>
+      </div>
       <Blockchain />
     </div>
   )

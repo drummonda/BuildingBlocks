@@ -1,7 +1,6 @@
 import io from 'socket.io-client';
 import { getState, getLatestBlock, addBlock, replaceChain } from '../server/blockchain';
 import store, { setBlockchain, updateStatus } from './store';
-
 const ws = io(window.location.origin);
 
 /*
@@ -12,7 +11,13 @@ const ws = io(window.location.origin);
 const QUERY_LATEST = 'QUERY_LATEST';
 const QUERY_ALL = 'QUERY_ALL';
 const RESPONSE_BLOCKCHAIN = 'RESPONSE_BLOCKCHAIN';
-
+const BLOCKCHAIN_BEHIND = 'BLOCKCHAIN_BEHIND';
+const APPEND_MESSAGE = "We can append the received block to our chain";
+const VALID_MESSAGE = "Received blockchain is valid, Replacing current blockhain with received blockchain";
+const QUERY_MESSAGE = "We have to query the chain from our peer";
+const RECEIVED_GREATER_MESSAGE = "Received blockchain is longer than current blockchain";
+const REPLACE_MESSAGE = "Received blockchain is valid, Replacing current blockhain with received blockchain";
+const DO_NOTHING_MESSAGE = "Received blockchain is not longer than current blockchain. Do nothing";
 
 /*
  ---------------------
@@ -20,9 +25,6 @@ const RESPONSE_BLOCKCHAIN = 'RESPONSE_BLOCKCHAIN';
  ---------------------
  */
 const write = (socket, message) => socket.send("message", message);
-// const broadcast = (message) => sockets.forEach(socket => write(socket, message));
-
-const queryChainLengthMsg = () => ({'type': QUERY_LATEST});
 const queryAllMsg = socket => socket.emit('message', {'type': QUERY_ALL});
 
 const responseChainMsg = () =>({
@@ -39,30 +41,55 @@ const responseLatestMsg = blockchain => ({
  UTILITY METHODS
  -----------------
  */
+
+const status = message => {
+  store.dispatch(updateStatus(message));
+};
+
+const updateBlockchain = blockchain => {
+  store.dispatch(setBlockchain(blockchain));
+}
+
+const isBehind = (blockOne, blockTwo) => blockOne.index > blockTwo.index;
+const behindMessage = (blockOne, blockTwo) => `blockchain possibly behind. We got: ${blockOne.index} while peer got: ${blockTwo.index}`;
+const sortReceivedBlocks = received => JSON.parse(received).sort((b1, b2) => (b1.index - b2.index));
+
+const queryFromPeer = socket => {
+  status(QUERY_MESSAGE);
+  write(socket, queryAllMsg());
+}
+
+const replaceMyBlocks = (receivedBlocks, socket) => {
+  status(RECEIVED_GREATER_MESSAGE);
+  const newBlocks = replaceChain(receivedBlocks);
+  status(REPLACE_MESSAGE);
+  write(socket, responseLatestMsg(newBlocks));
+}
+
+const appendNewBlocks = (latestBlocks, socket) => {
+  status(APPEND_MESSAGE);
+  const newBlocks = addBlock(latestBlocks);
+  status(VALID_MESSAGE);
+  updateBlockchain(newBlocks);
+  write(socket, responseLatestMsg(newBlocks));
+}
+
 const handleBlockchainResponse = (socket, message) => {
     try {
-      const receivedBlocks = JSON.parse(message.data).sort((b1, b2) => (b1.index - b2.index));
+      const receivedBlocks = sortReceivedBlocks(message.data);
       const latestBlockReceived = receivedBlocks[receivedBlocks.length - 1];
       const latestBlockHeld = getLatestBlock();
-      if (latestBlockReceived.index > latestBlockHeld.index) {
-          store.dispatch(updateStatus('blockchain possibly behind. We got: ' + latestBlockHeld.index + ' Peer got: ' + latestBlockReceived.index));
+      if (isBehind(latestBlockReceived, latestBlockHeld)) {
+          status(behindMessage(latestBlockHeld, latestBlockReceived));
           if (latestBlockHeld.hash === latestBlockReceived.previousHash) {
-              store.dispatch(updateStatus("We can append the received block to our chain"));
-              const newBlocks = addBlock(latestBlockReceived);
-              store.dispatch(updateStatus("Received blockchain is valid, Replacing current blockhain with received blockchain"));
-              store.dispatch(setBlockchain(newBlocks));
-              write(socket, responseLatestMsg(newBlocks));
+              appendNewBlocks(latestBlockReceived, socket);
           } else if (receivedBlocks.length === 1) {
-              store.dispatch(updateStatus("We have to query the chain from our peer"));
-              write(socket, queryAllMsg());
+              queryFromPeer(socket);
           } else {
-              store.dispatch(updateStatus("Received blockchain is longer than current blockchain"));
-              const newBlocks = replaceChain(receivedBlocks);
-              store.dispatch(updateStatus("Received blockchain is valid, Replacing current blockhain with received blockchain"));
-              write(socket, responseLatestMsg(newBlocks));
+              replaceMyBlocks(receivedBlocks, socket);
           }
       } else {
-          store.dispatch(updateStatus('received blockchain is not longer than current blockchain. Do nothing'));
+          status(DO_NOTHING_MESSAGE);
       }
     } catch (err) {
       console.error(err);

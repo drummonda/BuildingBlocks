@@ -51,7 +51,7 @@ class Blockchain extends Component {
             onChange={this.handleChange}
           />
           <Button primary>
-            New block!
+            Mine block!
           </Button>
         </Form>
       </div>

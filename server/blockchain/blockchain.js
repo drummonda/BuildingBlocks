@@ -1,5 +1,4 @@
 const { calculateHashForBlock, calculateHash } = require("./utils")
-const { write, broadcast, responseLatestMsg } = require("../socket");
 
 // BLOCKCHAIN CONSTRUCTOR METHODS
 class Block {

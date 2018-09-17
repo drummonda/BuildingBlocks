@@ -6,14 +6,14 @@ class Status extends Component {
 
   render() {
     const { status } = this.props;
-    const recent = status.slice(-3);
+    const recent = status.slice(-2);
 
     return (
       <Feed className='message'>
           {recent.map(msg => (
             <Feed.Event>
               <Feed.Label icon='rss' summary='Event'/>
-              <Feed.Content>{msg}</Feed.Content>
+              <Feed.Content summary={msg}/>
             </Feed.Event>
           ))}
       </Feed>

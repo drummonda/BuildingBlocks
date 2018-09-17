@@ -56,8 +56,8 @@
     "pg": "^6.1.2",
     "pg-hstore": "^2.3.2",
     "prop-types": "^15.6.2",
-    "pug": "^2.0.3",
     "react": "^16.4.2",
+    "react-blockies": "^1.3.0",
     "react-dom": "^16.4.2",
     "react-redux": "^5.0.2",
     "react-router-dom": "^4.3.1",
@@ -67,8 +67,6 @@
     "semantic-ui-react": "^0.82.3",
     "sequelize": "^4.38.0",
     "socket.io": "^2.1.1",
-    "socket.io-p2p": "^2.2.0",
-    "socket.io-p2p-server": "^1.2.0",
     "utf-8-validate": "^5.0.1",
     "uws": "^99.0.0"
   },
