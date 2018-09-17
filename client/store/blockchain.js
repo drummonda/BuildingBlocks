@@ -35,7 +35,7 @@ export const fetchBlockchain = () => async dispatch => {
 
 export const mineBlock = blockData => async dispatch => {
   try {
-    const { data } = await axios.post('/api/blockchain/mine', { blockData } )
+    const { data } = await axios.post('/api/blockchain/mineBlock', { blockData } )
     dispatch(setBlockchain(data));
   } catch (err) {
     console.error(err);

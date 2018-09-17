@@ -9,6 +9,6 @@ router.get('/peers', (req, res) => {
 
 // Adding a new peer to the p2p network
 router.post('/addPeer', (req, res) => {
-  connectToPeers([req.body.peer]);
+  connectToPeers(req.body.peer);
   res.send();
 });

@@ -1,6 +1,5 @@
 const router = require('express').Router()
-const { getState, addBlock, generateNextBlock } = require('../blockchain')
-const { broadcast, responseLatestMsg } = require('../socket');
+const { getState, generateNextBlock } = require('../blockchain')
 
 module.exports = router
 
@@ -15,13 +14,11 @@ router.get('/', (req, res, next) => {
 });
 
 // Method for adding a new block to the blockchain
-router.post('/mine', (req, res, next) => {
+router.post('/mineBlock', (req, res, next) => {
   try {
     const { blockData } = req.body;
     const newBlock = generateNextBlock(blockData);
-    const newBlockchain = addBlock(newBlock);
-    broadcast(responseLatestMsg(newBlock));
-    res.json(newBlockchain);
+    res.json(newBlock);
   } catch (err) {
     next(err);
   }
