@@ -17,7 +17,7 @@ module.exports = {
   isValidBlockStructure
 }
 
-const { broadcastLatest, broadcast } = require('../socket');
+const { broadcastLatest } = require('../socket');
 
 // BLOCKCHAIN CONSTRUCTOR METHODS
 class Block {
@@ -40,7 +40,7 @@ function genesisBlock() {
   return getGenesisBlock();
 }
 
-function isValidBlockStructure() {
+function isValidBlockStructure(block) {
   return typeof block.index === 'number'
       && typeof block.hash === 'string'
       && typeof block.previousHash === 'string'

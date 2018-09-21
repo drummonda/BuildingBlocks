@@ -5,13 +5,10 @@ module.exports = {
   broadcast,
   connectToPeers,
   broadcastLatest,
-  getSockets,
-  getPeers
+  getSockets
 }
 
 const WebSocket = require('ws');
-const { Server } = require('ws');
-const P2P = 6001;
 
 const {
   addBlockToChain,
@@ -26,10 +23,26 @@ const {
  SOCKET INFO
  ---------------
  */
-const sockets = [];
+let state = {
+  sockets: []
+}
 
 function getSockets() {
-  return sockets;
+  return state.sockets;
+}
+
+function setSockets(sockets) {
+  state = { sockets }
+}
+
+function addSocket(socket) {
+  state = {...state, sockets: [...state.sockets, socket]};
+}
+
+function removeSocket(socket) {
+  const sockets = getSockets();
+  const updated = sockets.filter(s => s !== socket);
+  setSockets(updated);
 }
 
 /*
@@ -47,13 +60,9 @@ const RESPONSE_BLOCKCHAIN = 'RESPONSE_BLOCKCHAIN';
  -------------------------
  */
 
-function getPeers() {
-  return sockets.map(s => s.request.connection.remoteAddress + ':' + s.request.connection.remotePort)
-}
-
 function closeConnection(socket) {
   console.log('connection failed to peer: ' + socket.url);
-  sockets.splice(sockets.indexOf(socket), 1);
+  removeSocket(socket);
 };
 
 function JSONToObject(data) {
@@ -75,7 +84,8 @@ function write(ws, message) {
 }
 
 function broadcast(message) {
-  sockets.forEach(socket => write(socket, message));
+  const connSockets = getSockets();
+  connSockets.forEach(socket => write(socket, message));
 }
 
 function queryChainLengthMsg() {
@@ -98,6 +108,16 @@ function responseLatestMsg() {
     type: RESPONSE_BLOCKCHAIN,
     data: JSON.stringify([getLatestBlock()])
   }
+}
+
+function getReceivedBlocks(message) {
+  const receivedBlocks = JSONToObject(message.data);
+  if(!receivedBlocks) {
+    console.log('invalid blocks received');
+    return false;
+  }
+  return receivedBlocks;
+
 }
 
 function handleBlockchainResponse(receivedBlocks) {
@@ -136,7 +156,7 @@ function initMessageHandler(ws) {
       console.log('could not parse received JSON message')
       return
     }
-    console.log(`Received message, ${JSON.stringify(message)}`);
+    console.log(`Received message`, message);
     switch(message.type) {
       case QUERY_LATEST:
         write(ws, responseLatestMsg());
@@ -147,15 +167,8 @@ function initMessageHandler(ws) {
         break;
 
       case RESPONSE_BLOCKCHAIN:
-        const receivedMessage = JSONToObject(message);
-        const receivedBlocks = receivedMessage.data;
-        console.log("these were the received blocks", receivedBlocks);
-        if(!receivedBlocks) {
-          console.log('invalid blocks received');
-          console.log(message.data);
-          break;
-        }
-        handleBlockchainResponse(receivedBlocks);
+        const receivedBlocks = getReceivedBlocks(message);
+        if(receivedBlocks) handleBlockchainResponse(receivedBlocks);
         break;
 
       default:
@@ -197,18 +210,23 @@ function initErrorHandler(socket) {
 }
 
 function initConnection(socket) {
-    sockets.push(socket);
+    addSocket(socket);
     initMessageHandler(socket);
     initErrorHandler(socket);
     write(socket, responseChainMsg());
 };
 
-function initP2PServer() {
-  const server = new WebSocket.Server({ port: P2P });
+function verify(info) {
+  //console.log("verifying", info);
+  return true;
+}
+
+function initP2PServer(p2p) {
+  const server = new WebSocket.Server({port: p2p });
   server.on('connection', ws => {
     initConnection(ws);
   })
-  console.log('listening websocket p2p port on: ' + P2P);
+  console.log('listening websocket p2p port on: ' + p2p);
 };
 
 function initServer(io) {

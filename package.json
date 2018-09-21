@@ -41,12 +41,14 @@
     "bufferutil": "^4.0.0",
     "compression": "^1.7.3",
     "connect-session-sequelize": "^4.1.0",
-    "crypto-js": "^3.1.6",
+    "crypto-js": "^3.1.8",
+    "elliptic": "^6.4.1",
     "express": "^4.16.3",
     "express-session": "^1.15.1",
     "fs": "0.0.1-security",
     "graceful-fs": "^4.1.11",
     "history": "^4.6.3",
+    "lodash": "^4.17.11",
     "minimatch": "^3.0.2",
     "morgan": "^1.8.1",
     "net": "^1.0.2",
@@ -68,7 +70,8 @@
     "sequelize": "^4.38.0",
     "socket.io": "^2.1.1",
     "utf-8-validate": "^5.0.1",
-    "uws": "^99.0.0"
+    "uws": "^99.0.0",
+    "websocket": "^1.0.26"
   },
   "devDependencies": {
     "@babel/core": "^7.0.0-beta.55",

@@ -8,7 +8,8 @@ const SequelizeStore = require('connect-session-sequelize')(session.Store)
 const db = require('./db')
 const sessionStore = new SequelizeStore({db})
 const PORT = process.env.PORT || 8080;
-const app = express()
+const P2P = 6001;
+const app = express();
 const socketio = require('socket.io');
 module.exports = app
 
@@ -60,6 +61,7 @@ const createApp = () => {
       saveUninitialized: false
     })
   )
+
   app.use(passport.initialize())
   app.use(passport.session())
 
@@ -95,16 +97,18 @@ const createApp = () => {
   })
 }
 
+
+
 const startListening = () => {
   // start listening (and create a 'server' object representing our server)
   const { initServer, initP2PServer } = require('./socket');
   const server = app.listen(PORT, () =>
     console.log(`Mixing it up on port ${PORT}`)
-  )
+  );
 
   const io = socketio(server);
   initServer(io);
-  initP2PServer();
+  initP2PServer(P2P);
 
 }
 

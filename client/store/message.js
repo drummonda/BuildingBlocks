@@ -9,7 +9,7 @@ export const UPDATE_STATUS = 'UPDATE_STATUS'
  * INITIAL STATE
  */
 const defaultMessageBoard = {
-  status: [],
+  status: 'No connected nodes',
 };
 
 /**
@@ -21,13 +21,23 @@ export const updateStatus = status => ({
 });
 
 /**
+ * THUNK CREATORS
+ */
+export const fetchPeers = () => async dispatch => {
+  const { data } = await axios.get('/api/peers/');
+  const message = `Connected nodes: ${data.nodes}`
+  console.log('nodes', message);
+  dispatch(updateStatus(message));
+}
+
+/**
  * REDUCER
  */
 export default function(state = defaultMessageBoard, action) {
   switch (action.type) {
 
     case UPDATE_STATUS:
-      return {...state, status: [...state.status, action.status] };
+      return {...state, status: action.status };
 
     default:
       return state;

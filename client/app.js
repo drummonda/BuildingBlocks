@@ -1,9 +1,10 @@
 import React from 'react'
 
-import { Navbar, Status, VerticalMenu } from './components'
+import { Navbar, Status } from './components'
 import Routes from './routes'
 
 const App = () => {
+
   return (
     <div>
       <Navbar />
