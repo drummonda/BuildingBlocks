@@ -16,13 +16,6 @@ export default class Navbar extends Component {
             Building Blocks
           </Menu.Item>
 
-          <Menu.Item
-            className='menu-item'
-            name='home'
-            as={Link}
-            to='/home'
-          />
-
           <Menu.Menu position='right'>
             <Menu.Item>
               <Input icon='search' placeholder='This does nothing!' />
