@@ -1,4 +1,4 @@
-const CryptoJS = require('CryptoJS');
+const CryptoJS = require('crypto-js');
 const ecdsa = require('elliptic');
 const _ = require('lodash');
 
@@ -386,4 +386,16 @@ function isValidAddress(address) {
   return true;
 }
 
-
+module.exports = {
+  processTransactions,
+  signTxIn,
+  getTransactionId,
+  isValidAddress,
+  UnspentTxOut,
+  TxIn,
+  TxOut,
+  getCoinbaseTransaction,
+  getPublicKey,
+  Transaction,
+  getUTxOs,
+}

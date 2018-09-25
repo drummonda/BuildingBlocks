@@ -14,10 +14,25 @@ module.exports = {
   addBlockToChain,
   replaceChain,
   hashMatchesDifficulty,
-  isValidBlockStructure
+  isValidBlockStructure,
+  generateRawNextBlock,
+  generateNextBlockWithTransaction,
 }
 
 const { broadcastLatest } = require('../socket');
+
+const {
+  createTransaction,
+  getBalance,
+  getPrivateFromWallet,
+  getPublicFromWallet
+} = require('./wallet');
+
+const {
+  getCoinbaseTransaction,
+  isValidAddress,
+  processTransactions
+} = require('./transactions');
 
 // BLOCKCHAIN CONSTRUCTOR METHODS
 class Block {
@@ -52,17 +67,24 @@ function isValidBlockStructure(block) {
 // THE BLOCKCHAIN STATE
 
 let state = {
-  blockchain: [genesisBlock()]
+  blockchain: [genesisBlock()],
+  unspentTxOuts: [],
 }
 
 function getState() {
   return state.blockchain;
 }
 
+function getUnspentTxOuts() {
+  return state.unspentTxOuts;
+}
+
 function updateState(blockchain) {
-  state = {
-    blockchain
-  };
+  state = { ...state, blockchain };
+}
+
+function updateUTxOs(uTxOs) {
+  state = { ...state, unspentTxOuts: uTxOs }
 }
 
 // BLOCKCHAIN UTILITY METHODS
@@ -138,21 +160,56 @@ function replaceChain(newBlocks) {
 function addBlockToChain(newBlock) {
   const latestBlock = getLatestBlock();
   if (isValidNewBlock(newBlock, latestBlock)) {
-      const newBlockchain = [...state.blockchain, newBlock];
-      const result = replaceChain(newBlockchain);
-      return result;
+      const returnVal = processTransactions(newBlock.data, getUnspentTxOuts(), newBlock.index);
+      if(returnVal === null) {
+        return false;
+      } else {
+        const newBlockchain = [...state.blockchain, newBlock];
+        const result = replaceChain(newBlockchain);
+        updateUTxOs(returnVal);
+        return result;
+      }
   } else {
     throw new Error('The new block was not valid!');
   }
 }
 
-function generateNextBlock(blockData) {
+function generateNextBlock() {
+  const coinbaseTx = getCoinbaseTransaction(getPublicFromWallet(), getLatestBlock().index + 1);
+  const blockData = [coinbaseTx];
+  return generateRawNextBlock(blockData);
+}
+
+function generateRawNextBlock(blockData) {
   const previousBlock = getLatestBlock();
   const difficulty = getDifficulty(getState());
   const nextIndex = previousBlock.index + 1;
   const nextTimestamp = new Date().getTime() / 1000;
   const newBlock = findBlock(nextIndex, previousBlock.hash, nextTimestamp, blockData, difficulty);
   const newBlockchain = addBlockToChain(newBlock);
-  broadcastLatest()
-  return newBlockchain;
+  if(newBlockchain) {
+    broadcastLatest();
+    return newBlockchain;
+  } else {
+    return null;
+  }
 }
+
+function generateNextBlockWithTransaction(receiverAddress, amount) {
+  if(!isValidAddress(receiverAddress)) {
+    throw Error('invalid address');
+  }
+  if(typeof amount !== 'number') {
+    throw Error('invalid ammount');
+  }
+  const coinbaseTx = getCoinbaseTransaction(getPublicFromWallet(), getLatestBlock().index + 1);
+  const tx = createTransaction(receiverAddress, amount, getPrivateFromWallet(), getUnspentTxOuts());
+  const blockData = [coinbaseTx, tx];
+  return generateNextBlock(blockData);
+}
+
+function getAccountBalance() {
+  return getBalance(getPublicFromWallet(), getUnspentTxOuts());
+}
+
+
