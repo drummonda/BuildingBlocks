@@ -29,13 +29,13 @@ export const setBlockchain = blockchain => ({
 // THUNK CREATORS
 export const fetchBlockchain = () => async dispatch => {
   const { data } = await axios.get('/api/blockchain');
-
   dispatch(setBlockchain(data));
 }
 
 export const mineBlock = blockData => async dispatch => {
   try {
-    const { data } = await axios.post('/api/blockchain/mine', { blockData } )
+    const { data } = await axios.post('/api/blockchain/mineBlock', { blockData } );
+    console.log("mined blockchain", data)
     dispatch(setBlockchain(data));
   } catch (err) {
     console.error(err);

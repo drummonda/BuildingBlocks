@@ -12,6 +12,7 @@ class Chain extends Component {
 
   render() {
     const { blockchain } = this.props;
+    console.log("this is the blockchain", blockchain);
 
     return (
       <div>

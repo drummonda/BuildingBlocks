@@ -15,17 +15,6 @@ const RESPONSE_BLOCKCHAIN = 'RESPONSE_BLOCKCHAIN';
  MESSAGE HELPER METHODS
  ---------------------
  */
-const queryChainLengthMsg = () => ({'type': QUERY_LATEST});
-const queryAllMsg = socket => socket.emit('message', {'type': QUERY_ALL});
-
-const responseChainMsg = () =>({
-  'type': RESPONSE_BLOCKCHAIN, 'data': JSON.stringify(getState())
-});
-
-const responseLatestMsg = block => ({
-  'type': RESPONSE_BLOCKCHAIN,
-  'data': JSON.stringify([block])
-});
 
 const handleBlockchainResponse = (message) => {
     const receivedBlocks = JSON.parse(message.data).sort((b1, b2) => (b1.index - b2.index));

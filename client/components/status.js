@@ -1,22 +1,34 @@
 import React, { Component } from 'react';
 import {connect} from 'react-redux';
-import { Feed, Icon } from 'semantic-ui-react';
+import { Message, Icon } from 'semantic-ui-react';
+import { fetchPeers } from '../store/message';
 
 class Status extends Component {
 
+  componentDidMount() {
+    setInterval(() => {
+      this.props.fetchPeers();
+    }, 1000);
+  }
+
+  componentDidUpdate(prevProps) {
+    const { status } = this.props;
+    if(status !== prevProps.status) {
+      this.props.fetchPeers();
+    }
+  }
+
   render() {
     const { status } = this.props;
-    const recent = status.slice(-2);
 
     return (
-      <Feed className='message'>
-          {recent.map(msg => (
-            <Feed.Event>
-              <Feed.Label icon='rss' summary='Event'/>
-              <Feed.Content summary={msg}/>
-            </Feed.Event>
-          ))}
-      </Feed>
+      <Message positive icon>
+        <Icon name='circle notched' loading />
+        <Message.Content>
+          <Message.Header>Searching for connections</Message.Header>
+          {status}
+        </Message.Content>
+      </Message>
     )
   }
 
@@ -28,4 +40,8 @@ const mapStateToProps = state => ({
   status: state.message.status,
 })
 
-export default connect(mapStateToProps, null)(Status);
+const mapDispatchToProps = dispatch => ({
+  fetchPeers: () => dispatch(fetchPeers())
+})
+
+export default connect(mapStateToProps, mapDispatchToProps)(Status);
