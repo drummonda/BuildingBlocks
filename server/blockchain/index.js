@@ -8,7 +8,12 @@ const {
   replaceChain,
   isValidBlockStructure,
   getAccountBalance,
-  generateNextBlockWithTransaction
+  generateNextBlockWithTransaction,
+  handleReceivedTransaction,
+  getMyUnspentTransactionOutputs,
+  sendTransaction,
+  getUnspentTxOuts
+
 } = require('./blockchain');
 
 module.exports = {
@@ -20,6 +25,10 @@ module.exports = {
   getLatestBlock,
   replaceChain,
   isValidBlockStructure,
+  generateNextBlockWithTransaction,
+  handleReceivedTransaction,
+  getMyUnspentTransactionOutputs,
   getAccountBalance,
-  generateNextBlockWithTransaction
+  sendTransaction,
+  getUnspentTxOuts
 }

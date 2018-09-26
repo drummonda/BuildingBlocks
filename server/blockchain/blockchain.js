@@ -17,6 +17,11 @@ module.exports = {
   isValidBlockStructure,
   generateRawNextBlock,
   generateNextBlockWithTransaction,
+  handleReceivedTransaction,
+  getMyUnspentTransactionOutputs,
+  getAccountBalance,
+  sendTransaction,
+  getUnspentTxOuts
 }
 
 const { broadcastLatest } = require('../socket');
@@ -24,6 +29,7 @@ const { broadcastLatest } = require('../socket');
 const {
   createTransaction,
   getBalance,
+  findUnspentTxOuts,
   getPrivateFromWallet,
   getPublicFromWallet
 } = require('./wallet');
@@ -33,6 +39,12 @@ const {
   isValidAddress,
   processTransactions
 } = require('./transactions');
+
+const {
+  addToTransactionPool,
+  getTransactionPool,
+  updateTransactionPool
+} = require('./transactionPool');
 
 // BLOCKCHAIN CONSTRUCTOR METHODS
 class Block {
@@ -47,8 +59,17 @@ class Block {
     }
 }
 
+const genesisTransaction = {
+    'txIns': [{'signature': '', 'txOutId': '', 'txOutIndex': 0}],
+    'txOuts': [{
+        'address': '04bfcab8722991ae774db48f934ca79cfb7dd991229153b9f732ba5334aafcd8e7266e47076996b55a14bf9913ee3145ce0cfc1372ada8ada74bd287450313534a',
+        'amount': 50
+    }],
+    'id': 'e655f6a5f26dc9b4cac6e46f52336428287759cf81ef5ff10854f69d68f43fa3'
+};
+
 function getGenesisBlock() {
-  return new Block(0, "0", 1465154705, "my genesis block!!", "816534932c2b7154836da6afc367695e6337db8a921823784c14378abed4f7d7", 0, 0)
+  return new Block(0, "0", 1465154705, [genesisTransaction], "816534932c2b7154836da6afc367695e6337db8a921823784c14378abed4f7d7", 0, 0)
 }
 
 function genesisBlock() {
@@ -66,9 +87,11 @@ function isValidBlockStructure(block) {
 
 // THE BLOCKCHAIN STATE
 
+const defaultBlockchain = [genesisBlock()]
+
 let state = {
-  blockchain: [genesisBlock()],
-  unspentTxOuts: [],
+  blockchain: defaultBlockchain,
+  unspentTxOuts: processTransactions(defaultBlockchain[0].data, [], 0)
 }
 
 function getState() {
@@ -124,13 +147,22 @@ function isValidNewBlock(newBlock, previousBlock) {
 
 function isValidChain(blockchainToValidate) {
   if(!isValidGenesis(blockchainToValidate[0])) return false;
+  let aUnspentTxOuts = [];
+
   for(let i = 1; i < blockchainToValidate.length; i++) {
-    if(!isValidNewBlock(blockchainToValidate[i], blockchainToValidate[i-1])) {
+    const currentBlock = blockchainToValidate[i];
+    if(i !== 0 && !isValidNewBlock(blockchainToValidate[i], blockchainToValidate[i-1])) {
       console.log("the block was not valid", blockchainToValidate[i]);
       return false;
     }
+
+    aUnspentTxOuts = processTransactions(currentBlock.data, aUnspentTxOuts, currentBlock.index);
+    if(aUnspentTxOuts === null) {
+      console.log('invalid transactions in blockchain');
+      return false;
+    }
   }
-  return true;
+  return aUnspentTxOuts;
 }
 
 function findBlock(index, previousHash, timestamp, data, difficulty) {
@@ -146,10 +178,14 @@ function findBlock(index, previousHash, timestamp, data, difficulty) {
 }
 
 function replaceChain(newBlocks) {
-  if(isValidChain(newBlocks) &&
+  const aUnspentTxOuts = isValidChain(newBlocks);
+  const validChain = aUnspentTxOuts !== null;
+  if(validChain &&
      getAccumulatedDifficulty(newBlocks) > getAccumulatedDifficulty(getState())) {
     console.log('received blockchain is valid, replacing current blockchain with received blockchain');
     updateState(newBlocks);
+    const uTxOs = updateUTxOs();
+    updateTransactionPool(uTxOs);
     broadcastLatest();
     return getState();
   } else {
@@ -165,8 +201,10 @@ function addBlockToChain(newBlock) {
         return false;
       } else {
         const newBlockchain = [...state.blockchain, newBlock];
-        const result = replaceChain(newBlockchain);
         updateUTxOs(returnVal);
+        const unspentTxOuts = getUnspentTxOuts();
+        updateTransactionPool(unspentTxOuts);
+        const result = replaceChain(newBlockchain);
         return result;
       }
   } else {
@@ -195,6 +233,10 @@ function generateRawNextBlock(blockData) {
   }
 }
 
+function getMyUnspentTransactionOutputs() {
+  return findUnspentTxOuts(getPublicFromWallet(), getUnspentTxOuts);
+}
+
 function generateNextBlockWithTransaction(receiverAddress, amount) {
   if(!isValidAddress(receiverAddress)) {
     throw Error('invalid address');
@@ -210,6 +252,17 @@ function generateNextBlockWithTransaction(receiverAddress, amount) {
 
 function getAccountBalance() {
   return getBalance(getPublicFromWallet(), getUnspentTxOuts());
+}
+
+function sendTransaction(address, amount) {
+  const tx = createTransaction(address, amount, getPrivateFromWallet(), getUnspentTxOuts(), getTransactionPool());
+  addToTransactionPool(tx, getUnspentTxOuts());
+  broadCastTransactionPool();
+  return tx;
+}
+
+function handleReceivedTransaction(transaction) {
+  addToTransactionPool(transaction, getUnspentTxOuts());
 }
 
 
