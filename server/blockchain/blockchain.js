@@ -21,17 +21,20 @@ module.exports = {
   getMyUnspentTransactionOutputs,
   getAccountBalance,
   sendTransaction,
-  getUnspentTxOuts
+  getUnspentTxOuts,
+  makeTransaction,
+  addTransaction
 }
 
-const { broadcastLatest } = require('../socket');
+const { broadcastLatest, broadcastTransactionPool } = require('../socket');
 
 const {
   createTransaction,
   getBalance,
   findUnspentTxOuts,
   getPrivateFromWallet,
-  getPublicFromWallet
+  getPublicFromWallet,
+  createUnsignedTransaction
 } = require('./wallet');
 
 const {
@@ -184,7 +187,7 @@ function replaceChain(newBlocks) {
      getAccumulatedDifficulty(newBlocks) > getAccumulatedDifficulty(getState())) {
     console.log('received blockchain is valid, replacing current blockchain with received blockchain');
     updateState(newBlocks);
-    const uTxOs = updateUTxOs();
+    const uTxOs = getUnspentTxOuts();
     updateTransactionPool(uTxOs);
     broadcastLatest();
     return getState();
@@ -237,7 +240,7 @@ function getMyUnspentTransactionOutputs() {
   return findUnspentTxOuts(getPublicFromWallet(), getUnspentTxOuts);
 }
 
-function generateNextBlockWithTransaction(receiverAddress, amount) {
+function generateNextBlockWithTransaction(receiverAddress, senderAddress, signature, amount) {
   if(!isValidAddress(receiverAddress)) {
     throw Error('invalid address');
   }
@@ -245,19 +248,30 @@ function generateNextBlockWithTransaction(receiverAddress, amount) {
     throw Error('invalid ammount');
   }
   const coinbaseTx = getCoinbaseTransaction(getPublicFromWallet(), getLatestBlock().index + 1);
-  const tx = createTransaction(receiverAddress, amount, getPrivateFromWallet(), getUnspentTxOuts());
+  const tx = createTransaction(receiverAddress, senderAddress, amount, signature, getUnspentTxOuts());
   const blockData = [coinbaseTx, tx];
   return generateNextBlock(blockData);
 }
 
-function getAccountBalance() {
-  return getBalance(getPublicFromWallet(), getUnspentTxOuts());
+function getAccountBalance(address) {
+  return getBalance(address, getUnspentTxOuts());
 }
 
-function sendTransaction(address, amount) {
-  const tx = createTransaction(address, amount, getPrivateFromWallet(), getUnspentTxOuts(), getTransactionPool());
+function sendTransaction(receiverAddress, senderAddress, amount, signature) {
+  const tx = createTransaction(receiverAddress, senderAddress, amount, signature, getUnspentTxOuts());
   addToTransactionPool(tx, getUnspentTxOuts());
-  broadCastTransactionPool();
+  broadcastTransactionPool();
+  return tx;
+}
+
+function makeTransaction(receiverAddress, senderAddress, amount) {
+  const unsignedTx = createUnsignedTransaction(receiverAddress, senderAddress, amount, getUnspentTxOuts());
+  return unsignedTx;
+}
+
+function addTransaction(tx) {
+  addToTransactionPool(tx, getUnspentTxOuts());
+  broadcastTransactionPool();
   return tx;
 }
 

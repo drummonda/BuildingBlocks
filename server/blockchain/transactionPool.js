@@ -1,5 +1,5 @@
 const _ = require('lodash');
-const { Transaction, TxIn, UnspentTxOut, validateTransaction } = require('./transaction');
+const { Transaction, TxIn, UnspentTxOut, validateTransaction } = require('./transactions');
 
 module.exports = {
   addToTransactionPool,

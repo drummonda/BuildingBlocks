@@ -1,12 +1,20 @@
 const { ec } = require('elliptic');
-const { existsSync, readFileSync, unlinkSync, writeFileSync } = require('fs');
+const { existsSync, readFileSync, writeFileSync } = require('fs');
 const _ = require('lodash');
-const { getPublicKey, getTransactionId, signTxIn, Transaction, TxIn, TxOut,
-        UnspentTxOut } = require ('./transactions');
+const path = require('path');
+const {
+  getPublicKey,
+  getTransactionId,
+  signTxIn,
+  Transaction,
+  TxIn,
+  TxOut,
+} = require ('./transactions');
 
 
 module.exports = {
   createTransaction,
+  createUnsignedTransaction,
   getPublicFromWallet,
   getPrivateFromWallet,
   getBalance,
@@ -15,7 +23,7 @@ module.exports = {
 }
 
 const EC = new ec('secp256k1');
-const privateKeyLocation = '../../node/wallet/private_key.txt';
+const privateKeyLocation = 'node/wallet/private_key.txt';
 
 function getPrivateFromWallet() {
   const buffer = readFileSync(privateKeyLocation, 'utf8');
@@ -35,12 +43,16 @@ function generatePrivateKey() {
 }
 
 function initWallet() {
-  if(existsSync(privateKeyLocation)) {
-    return;
+  try {
+    if(existsSync(privateKeyLocation)) {
+      return;
+    }
+    const newPrivateKey = generatePrivateKey();
+    writeFileSync(privateKeyLocation, newPrivateKey);
+    console.log('new wallet with private key created');
+  } catch (err) {
+    console.error(err);
   }
-  const newPrivateKey = generatePrivateKey();
-  writeFileSync(privateKeyLocation, newPrivateKey);
-  console.log('new wallet with private key created');
 }
 
 function getBalance(address, unspentTxOuts) {
@@ -80,16 +92,15 @@ function toUnsignedTxIn(unspentTxOut) {
   return txIn;
 }
 
-function createTransaction(receiverAddress, amount, privateKey, unspentTxOuts) {
-  const myAddress = getPublicKey(privateKey);
-  const myUnspentTxOuts = unspentTxOuts.filter(uTxO => uTxO.address === myAddress);
-  const { includedUnspentTxOuts, leftOverAmount } = findTxOutsForAmount(amount, myUnspentTxOuts);
+function createTransaction(receiverAddress, senderAddress, amount, signature, unspentTxOuts) {
+  const senderUnspentTxOuts = unspentTxOuts.filter(uTxO => uTxO.address === senderAddress);
+  const { includedUnspentTxOuts, leftOverAmount } = findTxOutsForAmount(amount, senderUnspentTxOuts);
 
   const unsignedTxIns = includedUnspentTxOuts.map(toUnsignedTxIn);
 
   const tx = new Transaction();
   tx.txIns = unsignedTxIns;
-  tx.txOuts = createTxOuts(receiverAddress, myAddress, amount, leftOverAmount);
+  tx.txOuts = createTxOuts(receiverAddress, senderAddress, amount, leftOverAmount);
   tx.id = getTransactionId(tx);
 
   tx.txIns = tx.txIns.map((txIn, index) => {
@@ -98,5 +109,23 @@ function createTransaction(receiverAddress, amount, privateKey, unspentTxOuts) {
   });
 
   return tx;
+}
 
+function createUnsignedTransaction(receiverAddress, senderAddress, amount, unspentTxOuts) {
+  const senderUnspentTxOuts = unspentTxOuts.filter(uTxO => uTxO.address === senderAddress);
+  const { includedUnspentTxOuts, leftOverAmount } = findTxOutsForAmount(amount, senderUnspentTxOuts);
+
+  const unsignedTxIns = includedUnspentTxOuts.map(toUnsignedTxIn);
+
+  const tx = new Transaction();
+  tx.txIns = unsignedTxIns;
+  tx.txOuts = createTxOuts(receiverAddress, senderAddress, amount, leftOverAmount);
+  tx.id = getTransactionId(tx);
+
+  // tx.txIns = tx.txIns.map((txIn, index) => {
+  //   txIn.signature = signTxIn(tx, index, privateKey, unspentTxOuts);
+  //   return txIn;
+  // });
+
+  return tx;
 }

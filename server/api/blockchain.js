@@ -8,7 +8,9 @@ const {
   sendTransaction,
   getUnspentTxOuts,
   getMyUnspentTransactionOutputs,
-  getPublicFromWallet
+  getPublicFromWallet,
+  makeTransaction,
+  addTransaction
 } = require('../blockchain');
 
 module.exports = router
@@ -23,21 +25,12 @@ router.get('/', (req, res, next) => {
   }
 });
 
-// Method for getting a balance
+// Method for grabbing a user's account balance
 router.get('/balance', (req, res, next) => {
   try {
-    const balance = getAccountBalance();
-    res.send({ balance });
-  } catch (err) {
-    next(err);
-  }
-})
-
-// Method for getting address
-router.get('/address', (req, res, next) => {
-  try {
-    const address = getAccountBalance();
-    res.send({ address });
+    const { address } = req.headers;
+    const balance = getAccountBalance(address);
+    res.send(balance);
   } catch (err) {
     next(err);
   }
@@ -76,16 +69,6 @@ router.post('/mineBlock', (req, res, next) => {
   }
 })
 
-// Method for grabbing a user's balance
-router.get('/balance', (req, res, next) => {
-  try {
-    const balance = getAccountBalance();
-    res.send(balance);
-  } catch (err) {
-    next(err);
-  }
-})
-
 // Method for mining a transaction
 router.post('/mineTransaction', (req, res, next) => {
   try {
@@ -100,12 +83,35 @@ router.post('/mineTransaction', (req, res, next) => {
 
 router.post('/sendTransaction', (req, res, next) => {
   try {
-    const { address, amount } = req.body;
-    if(address === undefined || amount === undefined) {
-      throw new Error('invalid address or amount');
+    const { receiverAddress, senderAddress, amount, signature } = req.body;
+    if(receiverAddress === undefined || amount === undefined) {
+      throw new Error('invalid address, amount');
     }
-    const resp = sendTransaction(address, amount);
+    const resp = sendTransaction(receiverAddress, senderAddress, amount, signature);
     res.send(resp);
+  } catch (err) {
+    next(err);
+  }
+})
+
+router.post('/proposeTransaction', (req, res, next) => {
+  try {
+    const { receiverAddress , senderAddress, amount } = req.body;
+    if(receiverAddress === undefined || amount === undefined) {
+      throw new Error('invalid address, amount');
+    }
+    const unsignedTx = makeTransaction(receiverAddress, senderAddress, amount);
+    res.send(unsignedTx);
+  } catch (err) {
+    next(err);
+  }
+})
+
+router.post('/signedTransaction', (req, res, next) => {
+  try {
+    const { tx } = req.body;
+    const addedTx = addTransaction(tx);
+    res.send(addedTx);
   } catch (err) {
     next(err);
   }

@@ -5,6 +5,7 @@ module.exports = {
   broadcast,
   connectToPeers,
   broadcastLatest,
+  broadcastTransactionPool,
   getSockets
 }
 

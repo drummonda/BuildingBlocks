@@ -397,5 +397,5 @@ module.exports = {
   getCoinbaseTransaction,
   getPublicKey,
   Transaction,
-  getUTxOs,
+  getUTxOs
 }

@@ -6,6 +6,7 @@ const PORT = process.env.PORT || 8080;
 const P2P = 6001;
 const app = express();
 const socketio = require('socket.io');
+const { initWallet } = require('./blockchain/wallet');
 module.exports = app
 
 /**
@@ -76,15 +77,16 @@ const startListening = () => {
 }
 
 async function bootApp() {
-  await createApp()
-  await startListening()
+  await createApp();
+  await startListening();
+  initWallet();
 }
 // This evaluates as true when this file is run directly from the command line,
 // i.e. when we say 'node server/index.js' (or 'nodemon server/index.js', or 'nodemon server', etc)
 // It will evaluate false when this module is required by another module - for example,
 // if we wanted to require our app in a test spec
 if (require.main === module) {
-  bootApp()
+  bootApp();
 } else {
   createApp()
 }

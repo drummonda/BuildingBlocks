@@ -8,7 +8,6 @@ const Block = ({ block }) => {
       <Card color='teal'>
         <Card.Content>
           <Card.Header>Block #{block.index}</Card.Header>
-          <Card.Description>{block.data}</Card.Description>
         </Card.Content>
         <Modal trigger={<Button>Details</Button>}>
           <Modal.Header>Block #{block.index} Details</Modal.Header>
@@ -24,8 +23,10 @@ const Block = ({ block }) => {
               <Header>Previous Block Hash:</Header>
               <p>{block.previousHash}</p>
 
-              <Header>Data:</Header>
-              <p>{block.data}</p>
+              <Header>Block Transactions:</Header>
+              <ul>
+                {block.data.map(t => <li key={t.id}>Transaction: {t.id}</li>)}
+              </ul>
 
             </Modal.Description>
           </Modal.Content>
