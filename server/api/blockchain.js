@@ -6,9 +6,6 @@ const {
   getAccountBalance,
   generateNextBlockWithTransaction,
   sendTransaction,
-  getUnspentTxOuts,
-  getMyUnspentTransactionOutputs,
-  getPublicFromWallet,
   makeTransaction,
   addTransaction
 } = require('../blockchain');

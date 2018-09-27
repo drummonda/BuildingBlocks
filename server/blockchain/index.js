@@ -12,7 +12,9 @@ const {
   handleReceivedTransaction,
   getMyUnspentTransactionOutputs,
   sendTransaction,
-  getUnspentTxOuts
+  getUnspentTxOuts,
+  makeTransaction,
+  addTransaction
 
 } = require('./blockchain');
 
@@ -30,5 +32,7 @@ module.exports = {
   getMyUnspentTransactionOutputs,
   getAccountBalance,
   sendTransaction,
-  getUnspentTxOuts
+  getUnspentTxOuts,
+  makeTransaction,
+  addTransaction
 }
