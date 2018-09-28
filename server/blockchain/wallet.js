@@ -45,6 +45,7 @@ function generatePrivateKey() {
 function initWallet() {
   try {
     if(existsSync(privateKeyLocation)) {
+      console.log('public', getPublicFromWallet());
       return;
     }
     const newPrivateKey = generatePrivateKey();
@@ -67,11 +68,12 @@ function findTxOutsForAmount(amount, myUnspentTxOuts) {
   const includedUnspentTxOuts = [];
   for(const myUnspentTxOut of myUnspentTxOuts) {
     includedUnspentTxOuts.push(myUnspentTxOut);
+    currentAmount = currentAmount + myUnspentTxOut.amount;
     if(currentAmount >= amount) {
       const leftOverAmount = currentAmount - amount;
       return { includedUnspentTxOuts, leftOverAmount };
     }
-  }
+  };
   throw Error('not enough coins to send transaction');
 }
 
@@ -92,8 +94,9 @@ function toUnsignedTxIn(unspentTxOut) {
   return txIn;
 }
 
-function createTransaction(receiverAddress, senderAddress, amount, signature, unspentTxOuts) {
+function createTransaction(receiverAddress, senderAddress, amount, privateKey, unspentTxOuts) {
   const senderUnspentTxOuts = unspentTxOuts.filter(uTxO => uTxO.address === senderAddress);
+
   const { includedUnspentTxOuts, leftOverAmount } = findTxOutsForAmount(amount, senderUnspentTxOuts);
 
   const unsignedTxIns = includedUnspentTxOuts.map(toUnsignedTxIn);
@@ -107,6 +110,8 @@ function createTransaction(receiverAddress, senderAddress, amount, signature, un
     txIn.signature = signTxIn(tx, index, privateKey, unspentTxOuts);
     return txIn;
   });
+
+  console.log('tx',tx);
 
   return tx;
 }

@@ -189,7 +189,7 @@ function getCoinbaseTransaction(address, blockIndex) {
   return t;
 }
 
-function signTxIn(transaction, txInIndex, txInNumber, privateKey, aUnspentTxOuts) {
+function signTxIn(transaction, txInIndex, privateKey, aUnspentTxOuts) {
   const txIn = transaction.txIns[txInIndex];
   const dataToSign = transaction.id;
   const referencedUnspentTxOut = findUnspentTxOut(txIn.txOutId, txIn.txOutIndex, aUnspentTxOuts);
@@ -397,5 +397,6 @@ module.exports = {
   getCoinbaseTransaction,
   getPublicKey,
   Transaction,
-  getUTxOs
+  getUTxOs,
+  validateTransaction
 }

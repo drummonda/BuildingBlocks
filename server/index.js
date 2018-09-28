@@ -6,7 +6,8 @@ const PORT = process.env.PORT || 8080;
 const P2P = 6001;
 const app = express();
 const socketio = require('socket.io');
-const { initWallet } = require('./blockchain/wallet');
+const { initWallet, getPrivateFromWallet, getPublicFromWallet } = require('./blockchain/wallet');
+const { sendTransaction } = require('./blockchain')
 module.exports = app
 
 /**
@@ -87,6 +88,7 @@ async function bootApp() {
   await createApp();
   await startListening();
   initWallet();
+  sendTransaction('049955b07f3dcbd257f704432cd7bc89162a01c74857cd1499e572b7231c578a469603aea106397cfb632bb61bf40e8ecc297839eda676caa58ce52c501809c7d2', getPublicFromWallet(), 20, getPrivateFromWallet());
 }
 // This evaluates as true when this file is run directly from the command line,
 // i.e. when we say 'node server/index.js' (or 'nodemon server/index.js', or 'nodemon server', etc)

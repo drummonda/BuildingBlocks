@@ -65,10 +65,10 @@ class Block {
 const genesisTransaction = {
     'txIns': [{'signature': '', 'txOutId': '', 'txOutIndex': 0}],
     'txOuts': [{
-        'address': '04bfcab8722991ae774db48f934ca79cfb7dd991229153b9f732ba5334aafcd8e7266e47076996b55a14bf9913ee3145ce0cfc1372ada8ada74bd287450313534a',
+        'address': '047d9e416d82996580000e08ac68782804531cee90e6627f76915daf2bba78caa63ba3cf8a7cd604bc2d057a4977f6b962e2db8c4d4bb013f771b650cf0141e795',
         'amount': 50
     }],
-    'id': 'e655f6a5f26dc9b4cac6e46f52336428287759cf81ef5ff10854f69d68f43fa3'
+    'id': '08ca104071f2574e3730d04fc7b1d79367fd1e9bd95298cc4567a3b8b20ae320'
 };
 
 function getGenesisBlock() {
@@ -257,8 +257,8 @@ function getAccountBalance(address) {
   return getBalance(address, getUnspentTxOuts());
 }
 
-function sendTransaction(receiverAddress, senderAddress, amount, signature) {
-  const tx = createTransaction(receiverAddress, senderAddress, amount, signature, getUnspentTxOuts());
+function sendTransaction(receiverAddress, senderAddress, amount, privateKey) {
+  const tx = createTransaction(receiverAddress, senderAddress, amount, privateKey, getUnspentTxOuts());
   addToTransactionPool(tx, getUnspentTxOuts());
   broadcastTransactionPool();
   return tx;
