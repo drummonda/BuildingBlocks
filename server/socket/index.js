@@ -1,12 +1,3 @@
-const {
-  addBlockToChain,
-  getLatestBlock,
-  isValidBlockStructure,
-  replaceChain,
-  getState,
-  handleReceivedTransaction
-} = require('../blockchain');
-
 module.exports = {
   initServer,
   initP2PServer,
@@ -18,6 +9,17 @@ module.exports = {
   getSockets
 }
 
+const {
+  addBlockToChain,
+  getLatestBlock,
+  isValidBlockStructure,
+  replaceChain,
+  getState,
+  handleReceivedTransaction
+} = require('../blockchain');
+
+
+console.log('get state', getState);
 const WebSocket = require('ws');
 
 

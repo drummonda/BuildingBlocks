@@ -26,7 +26,7 @@ module.exports = {
   addTransaction
 }
 
-const { broadcastLatest, broadcastTransactionPool } = require('../socket');
+// const { broadcastLatest, broadcastTransactionPool } = require('../socket');
 
 const {
   createTransaction,
@@ -189,7 +189,7 @@ function replaceChain(newBlocks) {
     updateState(newBlocks);
     const uTxOs = getUnspentTxOuts();
     updateTransactionPool(uTxOs);
-    broadcastLatest();
+    // broadcastLatest();
     return getState();
   } else {
     throw new Error('Received blockchain invalid')
@@ -229,7 +229,7 @@ function generateRawNextBlock(blockData) {
   const newBlock = findBlock(nextIndex, previousBlock.hash, nextTimestamp, blockData, difficulty);
   const newBlockchain = addBlockToChain(newBlock);
   if(newBlockchain) {
-    broadcastLatest();
+    // broadcastLatest();
     return newBlockchain;
   } else {
     return null;
@@ -240,7 +240,7 @@ function getMyUnspentTransactionOutputs() {
   return findUnspentTxOuts(getPublicFromWallet(), getUnspentTxOuts);
 }
 
-function generateNextBlockWithTransaction(receiverAddress, senderAddress, signature, amount) {
+function generateNextBlockWithTransaction(receiverAddress, senderAddress, privateKey, amount) {
   if(!isValidAddress(receiverAddress)) {
     throw Error('invalid address');
   }
@@ -248,9 +248,10 @@ function generateNextBlockWithTransaction(receiverAddress, senderAddress, signat
     throw Error('invalid ammount');
   }
   const coinbaseTx = getCoinbaseTransaction(getPublicFromWallet(), getLatestBlock().index + 1);
-  const tx = createTransaction(receiverAddress, senderAddress, amount, signature, getUnspentTxOuts());
+  const tx = createTransaction(receiverAddress, senderAddress, amount, privateKey, getUnspentTxOuts());
   const blockData = [coinbaseTx, tx];
-  return generateNextBlock(blockData);
+
+  return generateRawNextBlock(blockData);
 }
 
 function getAccountBalance(address) {
@@ -260,7 +261,7 @@ function getAccountBalance(address) {
 function sendTransaction(receiverAddress, senderAddress, amount, privateKey) {
   const tx = createTransaction(receiverAddress, senderAddress, amount, privateKey, getUnspentTxOuts());
   addToTransactionPool(tx, getUnspentTxOuts());
-  broadcastTransactionPool();
+  // broadcastTransactionPool();
   return tx;
 }
 
@@ -271,7 +272,7 @@ function makeTransaction(receiverAddress, senderAddress, amount) {
 
 function addTransaction(tx) {
   addToTransactionPool(tx, getUnspentTxOuts());
-  broadcastTransactionPool();
+  // broadcastTransactionPool();
   return tx;
 }
 

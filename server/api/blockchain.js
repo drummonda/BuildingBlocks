@@ -26,8 +26,9 @@ router.get('/', (req, res, next) => {
 router.get('/balance', (req, res, next) => {
   try {
     const { address } = req.headers;
+    console.log('address', address)
     const balance = getAccountBalance(address);
-    res.send(balance);
+    res.send(`${balance}`);
   } catch (err) {
     next(err);
   }

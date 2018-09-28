@@ -7,7 +7,7 @@ const P2P = 6001;
 const app = express();
 const socketio = require('socket.io');
 const { initWallet, getPrivateFromWallet, getPublicFromWallet } = require('./blockchain/wallet');
-const { sendTransaction } = require('./blockchain')
+const { sendTransaction, generateNextBlockWithTransaction } = require('./blockchain')
 module.exports = app
 
 /**
@@ -34,7 +34,7 @@ const createApp = () => {
   // access request
   app.use(function(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+    res.header("Access-Control-Allow-Headers", "*");
     next();
   });
 
@@ -88,7 +88,7 @@ async function bootApp() {
   await createApp();
   await startListening();
   initWallet();
-  sendTransaction('049955b07f3dcbd257f704432cd7bc89162a01c74857cd1499e572b7231c578a469603aea106397cfb632bb61bf40e8ecc297839eda676caa58ce52c501809c7d2', getPublicFromWallet(), 20, getPrivateFromWallet());
+  generateNextBlockWithTransaction('049955b07f3dcbd257f704432cd7bc89162a01c74857cd1499e572b7231c578a469603aea106397cfb632bb61bf40e8ecc297839eda676caa58ce52c501809c7d2', getPublicFromWallet(), getPrivateFromWallet(), 20);
 }
 // This evaluates as true when this file is run directly from the command line,
 // i.e. when we say 'node server/index.js' (or 'nodemon server/index.js', or 'nodemon server', etc)

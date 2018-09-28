@@ -97,21 +97,25 @@ function toUnsignedTxIn(unspentTxOut) {
 function createTransaction(receiverAddress, senderAddress, amount, privateKey, unspentTxOuts) {
   const senderUnspentTxOuts = unspentTxOuts.filter(uTxO => uTxO.address === senderAddress);
 
+  console.log('sender uTxOs', senderUnspentTxOuts);
+
   const { includedUnspentTxOuts, leftOverAmount } = findTxOutsForAmount(amount, senderUnspentTxOuts);
+
+  console.log('includedUnspentTxOuts', includedUnspentTxOuts);
 
   const unsignedTxIns = includedUnspentTxOuts.map(toUnsignedTxIn);
 
   const tx = new Transaction();
   tx.txIns = unsignedTxIns;
   tx.txOuts = createTxOuts(receiverAddress, senderAddress, amount, leftOverAmount);
+
+  console.log('txOuts', tx.txOuts);
   tx.id = getTransactionId(tx);
 
   tx.txIns = tx.txIns.map((txIn, index) => {
     txIn.signature = signTxIn(tx, index, privateKey, unspentTxOuts);
     return txIn;
   });
-
-  console.log('tx',tx);
 
   return tx;
 }
