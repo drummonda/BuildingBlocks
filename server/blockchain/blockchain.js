@@ -17,6 +17,7 @@ module.exports = {
   isValidBlockStructure,
   generateRawNextBlock,
   generateNextBlockWithTransaction,
+  generateNextBlockFromTxPool,
   handleReceivedTransaction,
   getMyUnspentTransactionOutputs,
   getAccountBalance,
@@ -218,6 +219,13 @@ function addBlockToChain(newBlock) {
 function generateNextBlock() {
   const coinbaseTx = getCoinbaseTransaction(getPublicFromWallet(), getLatestBlock().index + 1);
   const blockData = [coinbaseTx];
+  return generateRawNextBlock(blockData);
+}
+
+function generateNextBlockFromTxPool() {
+  const coinbaseTx = getCoinbaseTransaction(getPublicFromWallet(), getLatestBlock().index + 1);
+  const txPool = getTransactionPool();
+  const blockData = [coinbaseTx, ...txPool];
   return generateRawNextBlock(blockData);
 }
 

@@ -108,8 +108,8 @@ router.post('/proposeTransaction', (req, res, next) => {
 router.post('/signedTransaction', (req, res, next) => {
   try {
     const { tx } = req.body;
-    const addedTx = addTransaction(tx);
-    res.send(addedTx);
+    addTransaction(tx);
+    res.status(201).send(tx);
   } catch (err) {
     next(err);
   }

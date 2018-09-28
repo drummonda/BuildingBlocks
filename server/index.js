@@ -7,7 +7,7 @@ const P2P = 6001;
 const app = express();
 const socketio = require('socket.io');
 const { initWallet, getPrivateFromWallet, getPublicFromWallet } = require('./blockchain/wallet');
-const { sendTransaction, generateNextBlockWithTransaction } = require('./blockchain')
+const { generateNextBlockWithTransaction } = require('./blockchain');
 module.exports = app
 
 /**
@@ -68,8 +68,6 @@ const createApp = () => {
     res.status(err.status || 500).send(err.message || 'Internal server error.')
   })
 }
-
-
 
 const startListening = () => {
   // start listening (and create a 'server' object representing our server)
