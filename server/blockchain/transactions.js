@@ -1,4 +1,4 @@
-const CryptoJS = require('CryptoJS');
+const CryptoJS = require('crypto-js');
 const ecdsa = require('elliptic');
 const _ = require('lodash');
 
@@ -65,7 +65,7 @@ function getTransactionId(transaction) {
     .map(txOut => txOut.address + txOut.amount)
     .reduce((a, b) => a + b, '');
 
-  return CryptoJS.SHA256(txInContent + txInContent).toString();
+  return CryptoJS.SHA256(txInContent + txOutContent).toString();
 }
 
 // Make sure that a referenced txIn is valid from txOut
@@ -130,7 +130,7 @@ function validateTransaction(transaction, aUnspentTxOuts) {
 // ----------------------------------------------------
 function validateCoinbaseTx(transaction, blockIndex) {
   // Is the first transaction in the block the coinbase one
-  if(transaction == null) {
+  if(transaction === null) {
     console.log('the first transaction in the block must be a coinbase transaction');
     return false;
   }
@@ -189,7 +189,7 @@ function getCoinbaseTransaction(address, blockIndex) {
   return t;
 }
 
-function signTxIn(transaction, txInIndex, txInNumber, privateKey, aUnspentTxOuts) {
+function signTxIn(transaction, txInIndex, privateKey, aUnspentTxOuts) {
   const txIn = transaction.txIns[txInIndex];
   const dataToSign = transaction.id;
   const referencedUnspentTxOut = findUnspentTxOut(txIn.txOutId, txIn.txOutIndex, aUnspentTxOuts);
@@ -209,63 +209,194 @@ function signTxIn(transaction, txInIndex, txInNumber, privateKey, aUnspentTxOuts
   return signature;
 }
 
-function newUnspentTxOuts(newTransactions, aUnspentTxOuts) {
+// function newUnspentTxOuts(newTransactions, aUnspentTxOuts) {
+//   const newUnspentTxOuts = newTransactions
+//       .map(t => t.txOuts.map((txOut, index) => new UnspentTxOut(t.id, index, txOut.address, txOut.amount)))
+//       .reduce((a, b) => a.concat(b), []);
+
+//   const consumedTxOuts = newTransactions
+//       .map(t => t.txIns)
+//       .reduce((a, b) => a.concat(b), [])
+//       .map(txIn => new UnspentTxOut(txIn.txOutId, txIn.txOutIndex, '', 0));
+
+//   const resultingUnspentTxOuts = aUnspentTxOuts
+//       .filter(uTxO => !findUnspentTxOut(uTxO.txOutId, uTxO.txOutIndex, consumedTxOuts))
+//       .concat(newUnspentTxOuts);
+
+//   return resultingUnspentTxOuts;
+// }
+
+// Make sure that all transactions related to a block are valid
+function validateBlockTransactions(aTransactions, aUnspentTxOuts, blockIndex) {
+  const coinbaseTx = aTransactions[0];
+
+  // Is the coinbase transaction valid?
+  if(!validateCoinbaseTx(coinbaseTx, blockIndex)) {
+    console.log('invalid coinbase transaction', coinbaseTx);
+    return false;
+  }
+
+  // Check for duplicate transactions
+  const txIns = _(aTransactions)
+    .map(tx => tx.txIns)
+    .flatten()
+    .value();
+
+  if(hasDuplicates(txIns)) return false;
+
+  // Now, validate all but the coinbase transaction
+  const normalTransactions = aTransactions.slice(1);
+  return normalTransactions.map(tx => validateTransaction(tx, aUnspentTxOuts))
+                           .reduce((a, b) => (a && b), true);
+
+}
+
+function hasDuplicates(txIns) {
+  const groups = _.countBy(txIns, txIn => txIn.txOutId + txIn.txOutId);
+  return _(groups)
+    .map((value, key) => {
+      if(value > 1) {
+        console.log('duplicate transaction', key);
+        return true;
+      } else {
+        return false;
+      }
+    })
+    .includes(true);
+}
+
+function updateUnspentTxOuts(newTransactions, aUnspentTxOuts) {
   const newUnspentTxOuts = newTransactions
-      .map(t => t.txOuts.map((txOut, index) => new UnspentTxOut(t.id, index, txOut.address, txOut.amount)))
-      .reduce((a, b) => a.concat(b), []);
+    .map(t => t.txOuts.map((txOut, index) => new UnspentTxOut(t.id, index, txOut.address, txOut.amount)))
+    .reduce((a, b) => a.concat(b), []);
 
   const consumedTxOuts = newTransactions
-      .map(t => t.txIns)
-      .reduce((a, b) => a.concat(b), [])
-      .map(txIn => new UnspentTxOut(txIn.txOutId, txIn.txOutIndex, '', 0));
+    .map(t => t.txIns)
+    .reduce((a, b) => a.concat(b), [])
+    .map(txIn => new UnspentTxOut(txIn.txOutId, txIn.txOutIndex, '', 0));
 
   const resultingUnspentTxOuts = aUnspentTxOuts
-      .filter(uTxO => !findUnspentTxOut(uTxO.txOutId, uTxO.txOutIndex, consumedTxOuts))
-      .concat(newUnspentTxOuts);
+    .filter(uTxO => !findUnspentTxOut(uTxO.txOutId, uTxO.txOutIndex, consumedTxOuts))
+    .concat(newUnspentTxOuts);
 
   return resultingUnspentTxOuts;
 }
 
-
-
-function validateBlockTransactions(aTransactions, aUnspentTxOuts, blockIndex) {
-  return false;
-}
-
-function hasDuplicates(txIns) {
-  return false;
-}
-
 function processTransactions(aTransactions, aUnspentTxOuts, blockIndex) {
-  return false;
+
+  if(!isValidTransactionsStructure(aTransactions)) return null;
+
+  if(!validateBlockTransactions(aTransactions, aUnspentTxOuts, blockIndex)) {
+    console.log('invalid block transactions');
+    return null;
+  }
+
+  return updateUnspentTxOuts(aTransactions, aUnspentTxOuts);
 }
 
 function toHexString(byteArray) {
-  return false;
+  return Array.from(byteArray, byte => {
+    return ('0' + (byte & 0xFF).toString(16)).slice(-2);
+  }).join('');
 }
 
 function getPublicKey(aPrivateKey) {
-  return false;
+  return ec.keyFromPrivate(aPrivateKey, 'hex').getPublic().encode('hex');
 }
 
 function isValidTxInStructure(txIn) {
-  return false;
+  if(txIn === null) {
+    console.log('txIn is null');
+    return false;
+  } else if (typeof txIn.signature !== 'string') {
+    console.log('invalid signature type in txIn');
+    return false;
+  } else if (typeof txIn.txOutId !== 'string') {
+    console.log('invalid txOutId type in txIn');
+    return false;
+  } else if (typeof  txIn.txOutIndex !== 'number') {
+    console.log('invalid txOutIndex type in txIn');
+    return false;
+  } else {
+    return true;
+  }
 }
 
 function isValidTxOutStructure(txOut) {
-  return false;
+  if(txOut === null) {
+    console.log('txOut is null');
+    return false;
+  } else if(typeof txOut.address !== 'string') {
+    console.log('invalid address type in txOut');
+    return false;
+  } else if (!isValidAddress(txOut.address)) {
+    console.log('invalid TxOut address');
+    return false;
+  } else if (typeof txOut.amount !== 'number') {
+    console.log('invalid amount type in txOut');
+    return false;
+  } else {
+    return true;
+  }
 }
 
 function isValidTransactionsStructure(transactions) {
-  return false;
+  return transactions
+    .map(isValidTransactionStructure)
+    .reduce((a, b) => (a && b), true)
 }
 
 function isValidTransactionStructure(transaction) {
-  return false;
+  if(typeof transaction.id !== 'string') {
+    console.log('transactionId missing');
+    return false;
+  }
+  if(!(transaction.txIns instanceof Array)) {
+    console.log('invalid txIns type in transaction');
+    return false;
+  }
+  if(!transaction.txIns
+      .map(isValidTxInStructure)
+      .reduce((a, b) => (a && b), true)) {
+    return false;
+  }
+  if(!(transaction.txOuts instanceof Array)) {
+    console.log('invalid txIns type in transaction');
+    return false;
+  }
+  if(!transaction.txOuts
+        .map(isValidTxOutStructure)
+        .reduce((a, b) => (a && b), true)) {
+    return false;
+  }
+  return true;
 }
 
 function isValidAddress(address) {
-  return false;
+  if(address.length !== 130) {
+    console.log('invalid public key length');
+    return false;
+  } else if(address.match('^[a-fA-F0-9]+$') === null) {
+    console.log('public key must contain only hex characters');
+    return false;
+  } else if(!address.startsWith('04')) {
+    console.log('public key must start with 04');
+    return false;
+  }
+  return true;
 }
 
-
+module.exports = {
+  processTransactions,
+  signTxIn,
+  getTransactionId,
+  isValidAddress,
+  UnspentTxOut,
+  TxIn,
+  TxOut,
+  getCoinbaseTransaction,
+  getPublicKey,
+  Transaction,
+  getUTxOs,
+  validateTransaction
+}

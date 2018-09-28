@@ -5,18 +5,25 @@ module.exports = {
   broadcast,
   connectToPeers,
   broadcastLatest,
+  broadcastTransactionPool,
   getSockets
 }
-
-const WebSocket = require('ws');
 
 const {
   addBlockToChain,
   getLatestBlock,
   isValidBlockStructure,
   replaceChain,
-  getState
-} = require('../blockchain')
+  getState,
+  handleReceivedTransaction
+} = require('../blockchain');
+
+
+console.log('get state', getState);
+const WebSocket = require('ws');
+
+
+const { getTransactionPool } = require('../blockchain/transactionPool');
 
 /*
  ---------------
@@ -53,6 +60,8 @@ function removeSocket(socket) {
 const QUERY_LATEST = 'QUERY_LATEST';
 const QUERY_ALL = 'QUERY_ALL';
 const RESPONSE_BLOCKCHAIN = 'RESPONSE_BLOCKCHAIN';
+const QUERY_TRANSACTION_POOL = 'QUERY_TRANSACTION_POOL';
+const RESPONSE_TRANSACTION_POOL = 'RESPONSE_TRANSACTION_POOL';
 
 /*
  -------------------------
@@ -88,12 +97,20 @@ function broadcast(message) {
   connSockets.forEach(socket => write(socket, message));
 }
 
+function broadcastTransactionPool() {
+  broadcast(responseTransactionPoolMsg());
+}
+
 function queryChainLengthMsg() {
   return { type: QUERY_LATEST, data: null };
 }
 
 function queryAllMsg() {
   return { type: QUERY_ALL, data: null };
+}
+
+function queryTransactionPoolMsg() {
+  return { type: QUERY_TRANSACTION_POOL, data: null };
 }
 
 function responseChainMsg() {
@@ -109,6 +126,14 @@ function responseLatestMsg() {
     data: JSON.stringify([getLatestBlock()])
   }
 }
+
+function responseTransactionPoolMsg() {
+  return {
+    type: RESPONSE_TRANSACTION_POOL,
+    data: JSON.stringify(getTransactionPool())
+  }
+}
+
 
 function getReceivedBlocks(message) {
   const receivedBlocks = JSONToObject(message.data);
@@ -171,6 +196,25 @@ function initMessageHandler(ws) {
         if(receivedBlocks) handleBlockchainResponse(receivedBlocks);
         break;
 
+      case QUERY_TRANSACTION_POOL:
+        write(ws, responseTransactionPoolMsg());
+        break;
+
+      case RESPONSE_TRANSACTION_POOL:
+        if(!message.data) {
+          console.log('invalid transaction received: ', message.data);
+          break;
+        }
+        message.data.forEach(transaction => {
+          try {
+            handleReceivedTransaction(transaction);
+            broadcastTransactionPool();
+          } catch (err) {
+            console.log(err.message);
+          }
+        });
+        break;
+
       default:
         console.log('shit!!');
     }
@@ -215,11 +259,6 @@ function initConnection(socket) {
     initErrorHandler(socket);
     write(socket, responseChainMsg());
 };
-
-function verify(info) {
-  //console.log("verifying", info);
-  return true;
-}
 
 function initP2PServer(p2p) {
   const server = new WebSocket.Server({port: p2p });

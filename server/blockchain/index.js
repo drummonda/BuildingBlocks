@@ -1,11 +1,38 @@
-const { getState, addBlockToChain, getGenesisBlock, generateNextBlock, getLatestBlock, replaceChain, isValidBlockStructure } = require('./blockchain');
+const {
+  getState,
+  addBlockToChain,
+  getGenesisBlock,
+  generateNextBlock,
+  generateRawNextBlock,
+  getLatestBlock,
+  replaceChain,
+  isValidBlockStructure,
+  getAccountBalance,
+  generateNextBlockWithTransaction,
+  handleReceivedTransaction,
+  getMyUnspentTransactionOutputs,
+  sendTransaction,
+  getUnspentTxOuts,
+  makeTransaction,
+  addTransaction
+
+} = require('./blockchain');
 
 module.exports = {
   getState,
   addBlockToChain,
   getGenesisBlock,
   generateNextBlock,
+  generateRawNextBlock,
   getLatestBlock,
   replaceChain,
-  isValidBlockStructure
+  isValidBlockStructure,
+  generateNextBlockWithTransaction,
+  handleReceivedTransaction,
+  getMyUnspentTransactionOutputs,
+  getAccountBalance,
+  sendTransaction,
+  getUnspentTxOuts,
+  makeTransaction,
+  addTransaction
 }
