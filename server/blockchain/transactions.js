@@ -96,6 +96,8 @@ function validateTransaction(transaction, aUnspentTxOuts) {
   }
 
   // Are all of the transaction inputs to this transaction valid?
+  console.log('unspentTxOuts', aUnspentTxOuts);
+  console.log('transaction inputs', transaction.txIns);
   const hasValidTxIns = transaction.txIns
       .map(txIn => validateTxIn(txIn, transaction, aUnspentTxOuts))
       .reduce((a, b) => a && b, true);
@@ -242,12 +244,17 @@ function validateBlockTransactions(aTransactions, aUnspentTxOuts, blockIndex) {
     .flatten()
     .value();
 
-  if(hasDuplicates(txIns)) return false;
+
+  if(hasDuplicates(txIns)) {
+    console.log('has duplicate transaction inputs')
+    return false;
+  }
 
   // Now, validate all but the coinbase transaction
   const normalTransactions = aTransactions.slice(1);
-  return normalTransactions.map(tx => validateTransaction(tx, aUnspentTxOuts))
-                           .reduce((a, b) => (a && b), true);
+  return normalTransactions
+    .map(tx => validateTransaction(tx, aUnspentTxOuts))
+    .reduce((a, b) => (a && b), true);
 
 }
 
@@ -283,6 +290,8 @@ function updateUnspentTxOuts(newTransactions, aUnspentTxOuts) {
 }
 
 function processTransactions(aTransactions, aUnspentTxOuts, blockIndex) {
+
+  console.log('process transactions utxos', aUnspentTxOuts);
 
   if(!isValidTransactionsStructure(aTransactions)) return null;
 
