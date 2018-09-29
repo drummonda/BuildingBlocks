@@ -71,7 +71,7 @@ const createApp = () => {
 
 const startListening = () => {
   // start listening (and create a 'server' object representing our server)
-  const { initServer, initP2PServer } = require('./socket');
+  const { initServer, initP2PServer, initAutoMining } = require('./socket');
   const server = app.listen(PORT, () =>
     console.log(`Mixing it up on port ${PORT}`)
   );
@@ -79,7 +79,7 @@ const startListening = () => {
   const io = socketio(server);
   initServer(io);
   initP2PServer(P2P);
-
+  initAutoMining();
 }
 
 async function bootApp() {

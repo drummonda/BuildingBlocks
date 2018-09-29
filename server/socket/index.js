@@ -1,6 +1,7 @@
 module.exports = {
   initServer,
   initP2PServer,
+  initAutoMining,
   responseLatestMsg,
   broadcast,
   connectToPeers,
@@ -15,7 +16,8 @@ const {
   isValidBlockStructure,
   replaceChain,
   getState,
-  handleReceivedTransaction
+  handleReceivedTransaction,
+  generateNextBlockFromTxPool
 } = require('../blockchain');
 
 
@@ -216,7 +218,7 @@ function initMessageHandler(ws) {
         break;
 
       default:
-        console.log('shit!!');
+        console.log('Invalid message');
     }
   })
 }
@@ -261,7 +263,7 @@ function initConnection(socket) {
 };
 
 function initP2PServer(p2p) {
-  const server = new WebSocket.Server({port: p2p });
+  const server = new WebSocket.Server({ port: p2p });
   server.on('connection', ws => {
     initConnection(ws);
   })
@@ -277,4 +279,10 @@ function initServer(io) {
       console.log(`Connection ${socket.id} has left the building`)
     })
   })
+}
+
+function initAutoMining() {
+  setInterval(() => {
+    generateNextBlockFromTxPool();
+  }, 60000);
 }

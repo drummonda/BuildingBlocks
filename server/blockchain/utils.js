@@ -50,7 +50,7 @@ const isValidTimestamp = (newBlock, previousBlock) => {
 // BLOCKCHAIN UTILITY METHODS
 const hashMatchesDifficulty = (hash, difficulty) => {
     const hashInBinary = hexToBinary(hash);
-    const requiredPrefix = '0'.repeat(difficulty);
+    const requiredPrefix = ('0'.repeat(difficulty));
     return hashInBinary.startsWith(requiredPrefix);
 }
 
@@ -86,7 +86,7 @@ const getAdjustedDifficulty = (latestBlock, blockchain) => {
   if(timeTaken < TIME_EXPECTED / 2) {
     return prevAdjustmentBlock.difficulty + 1;
   } else if(timeTaken > TIME_EXPECTED * 2) {
-    return prevAdjustmentBlock.difficulty - 1;
+    return prevAdjustmentBlock.difficulty;
   } else {
     return prevAdjustmentBlock.difficulty;
   }

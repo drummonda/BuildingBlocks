@@ -24,7 +24,7 @@ export const getBlockchain = blockchain => ({
 export const setBlockchain = blockchain => ({
   type: SET_BLOCKCHAIN,
   blockchain
-})
+});
 
 // THUNK CREATORS
 export const fetchBlockchain = () => async dispatch => {
