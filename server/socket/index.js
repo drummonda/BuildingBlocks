@@ -21,7 +21,6 @@ const {
 } = require('../blockchain');
 
 
-console.log('get state', getState);
 const WebSocket = require('ws');
 
 
@@ -170,14 +169,15 @@ function handleBlockchainResponse(receivedBlocks) {
     } else {
       console.log('Received blockchain is longer than current blockchain');
       replaceChain(receivedBlocks);
+      broadcastLatest();
     }
   } else {
     console.log('Received blockchain is not longer than current blockchain, do nothing');
   }
 }
 
-function initMessageHandler(ws) {
-  ws.on('message', data => {
+function initMessageHandler(socket) {
+  socket.on('message', data => {
     const message = JSONToObject(data);
     if(message === null) {
       console.log('could not parse received JSON message')
@@ -263,11 +263,12 @@ function initConnection(socket) {
 };
 
 function initP2PServer(p2p) {
-  const server = new WebSocket.Server({ port: p2p });
-  server.on('connection', ws => {
-    initConnection(ws);
+  const server = require('socket.io')(p2p);
+  // const server = new WebSocket.Server({ port: p2p });
+  server.on('connection', socket => {
+    initConnection(socket);
   })
-  console.log('listening websocket p2p port on: ' + p2p);
+  console.log('listening socket p2p port on: ' + p2p);
 };
 
 function initServer(io) {
@@ -284,5 +285,6 @@ function initServer(io) {
 function initAutoMining() {
   setInterval(() => {
     generateNextBlockFromTxPool();
+    broadcastLatest();
   }, 60000);
 }

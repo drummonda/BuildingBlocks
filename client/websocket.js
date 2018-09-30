@@ -1,11 +1,9 @@
-import WebSocket from 'ws'
-const P2P = 'ws://localhost:6001'
-const ws = new WebSocket(P2P);
+import io from 'socket.io-client'
+const P2P = 'http://localhost:6001'
+const socket = io(P2P)
 
-ws.on('connect', () => {
-  console.log('fuck yea I connected');
+socket.on('connect', () => {
+  console.log('Connected to node broadcasts!')
 })
 
-ws.on('message', (message) => {
-  console.log('message received', message.data);
-})
+export default socket

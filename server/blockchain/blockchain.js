@@ -33,7 +33,6 @@ const {
   createTransaction,
   getBalance,
   findUnspentTxOuts,
-  getPrivateFromWallet,
   getPublicFromWallet,
   createUnsignedTransaction
 } = require('./wallet');
