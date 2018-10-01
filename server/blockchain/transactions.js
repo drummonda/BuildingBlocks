@@ -291,8 +291,6 @@ function updateUnspentTxOuts(newTransactions, aUnspentTxOuts) {
 
 function processTransactions(aTransactions, aUnspentTxOuts, blockIndex) {
 
-  console.log('process transactions utxos', aUnspentTxOuts);
-
   if(!isValidTransactionsStructure(aTransactions)) return null;
 
   if(!validateBlockTransactions(aTransactions, aUnspentTxOuts, blockIndex)) {

@@ -45,7 +45,7 @@ function generatePrivateKey() {
 function initWallet() {
   try {
     if(existsSync(privateKeyLocation)) {
-      console.log('public', getPublicFromWallet());
+      // console.log('my public key', getPublicFromWallet());
       return;
     }
     const newPrivateKey = generatePrivateKey();
@@ -105,7 +105,6 @@ function createTransaction(receiverAddress, senderAddress, amount, privateKey, u
   tx.txIns = unsignedTxIns;
   tx.txOuts = createTxOuts(receiverAddress, senderAddress, amount, leftOverAmount);
 
-  console.log('unspent txOuts', unspentTxOuts);
   tx.id = getTransactionId(tx);
 
   tx.txIns = tx.txIns.map((txIn, index) => {

@@ -263,8 +263,7 @@ function initConnection(socket) {
 };
 
 function initP2PServer(p2p) {
-  const server = require('socket.io')(p2p);
-  // const server = new WebSocket.Server({ port: p2p });
+  const server = new WebSocket.Server({ port: p2p });
   server.on('connection', socket => {
     initConnection(socket);
   })

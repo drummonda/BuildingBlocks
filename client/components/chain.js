@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 import {connect} from 'react-redux'
-import { Card } from 'semantic-ui-react'
+import { Card, Button } from 'semantic-ui-react'
 import { fetchBlockchain } from '../store'
 import Block from './block'
 
@@ -12,10 +12,16 @@ class Chain extends Component {
 
   render() {
     const { blockchain } = this.props;
-    console.log("this is the blockchain", blockchain);
 
     return (
       <div>
+        <Button
+          primary
+          onClick={() => this.props.fetchBlockchain()}
+        >
+          Refresh
+        </Button>
+
         <Card.Group>
           { blockchain.map(block => (
             <Block key={block.index} block={block} />
